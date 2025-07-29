@@ -3,7 +3,6 @@
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
-const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const app = express();
@@ -43,29 +42,35 @@ connectDB();
 // Login route
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { username, password } = req.body;
+
+    console.log('Login attempt:', { username, passwordProvided: !!password });
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!username || !password) {
+      return res.status(400).json({ error: 'Username and password are required' });
     }
 
     // Find user in database
     const [rows] = await db.execute(
-      'SELECT id, email, password_hash, role FROM users WHERE email = ?',
-      [email]
+      'SELECT id, username, password, role FROM users WHERE username = ?',
+      [username]
     );
 
+    console.log('Database query result:', rows.length > 0 ? 'User found' : 'User not found');
+
     if (rows.length === 0) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     const user = rows[0];
 
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password_hash);
+    // Compare passwords directly (no hashing)
+    const isValidPassword = password === user.password;
+    console.log('Password validation:', isValidPassword ? 'Success' : 'Failed');
+    
     if (!isValidPassword) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
     // Return success response with user info only
@@ -73,14 +78,17 @@ app.post('/api/login', async (req, res) => {
       success: true,
       user: {
         id: user.id,
-        email: user.email,
+        username: user.username,
         role: user.role
       }
     });
 
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    console.error('Login error details:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message // This will help us debug
+    });
   }
 });
 

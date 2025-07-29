@@ -60,7 +60,7 @@ function App() {
       <header className="app-header">
         <h1>Poster Campaigns</h1>
         <div className="user-info">
-          <span>Welcome, {user.email} ({user.role})</span>
+          <span>Welcome, {user.username} ({user.role})</span>
           <button onClick={handleBackToLogin} className="logout-button">
             Back to Login
           </button>
