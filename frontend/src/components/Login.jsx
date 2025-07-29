@@ -5,7 +5,7 @@ import './Login.css';
 
 function Login({ onLogin }) {
   const [formData, setFormData] = useState({
-    email: '',
+    username: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -58,15 +58,15 @@ function Login({ onLogin }) {
         {error && <div className="error-message">{error}</div>}
         
         <div className="form-group">
-          <label htmlFor="email">Email:</label>
+          <label htmlFor="username">Username:</label>
           <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
+            type="text"
+            id="username"
+            name="username"
+            value={formData.username}
             onChange={handleChange}
             required
-            placeholder="Enter your email"
+            placeholder="Enter your username"
           />
         </div>
 

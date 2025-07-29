@@ -18,7 +18,8 @@ const dbConfig = {
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
   database: process.env.DB_NAME || 'your_database_name',
-  port: process.env.DB_PORT || 3306
+  port: process.env.DB_PORT || 3306,
+  insecureAuth: true
 };
 
 // Database connection pool
@@ -34,8 +35,6 @@ async function connectDB() {
   }
 }
 
-// Initialize database connection
-connectDB();
 
 // --- API Routes ---
 
@@ -52,10 +51,16 @@ app.post('/api/login', async (req, res) => {
     }
 
     // Find user in database
-    const [rows] = await db.execute(
-      'SELECT id, username, password, role FROM users WHERE username = ?',
-      [username]
-    );
+    const conn = await db.getConnection();
+    try {
+      const [rows] = await conn.execute(
+        'SELECT id, username, password, role FROM users WHERE username = ?',
+        [username]
+      );
+      // continue as before...
+    } finally {
+      conn.release();
+    }
 
     console.log('Database query result:', rows.length > 0 ? 'User found' : 'User not found');
 
@@ -68,7 +73,7 @@ app.post('/api/login', async (req, res) => {
     // Compare passwords directly (no hashing)
     const isValidPassword = password === user.password;
     console.log('Password validation:', isValidPassword ? 'Success' : 'Failed');
-    
+
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
@@ -85,7 +90,7 @@ app.post('/api/login', async (req, res) => {
 
   } catch (error) {
     console.error('Login error details:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Internal server error',
       details: error.message // This will help us debug
     });
@@ -102,7 +107,19 @@ app.get('/api/campaigns', (req, res) => {
   res.json(sampleCampaigns);
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
-});
+async function startServer() {
+  try {
+    // First, connect to the database and wait for it to finish
+    await connectDB();
+
+    // Then, start the Express server
+    app.listen(PORT, () => {
+      console.log(`🚀 Server is running on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
