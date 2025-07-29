@@ -1,3 +1,5 @@
+/* frontend/src/App.css */
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +41,116 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* New styles for authentication */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-size: 1.2rem;
+}
+
+.app-container {
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 2rem;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-info span {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.logout-button {
+  padding: 0.5rem 1rem;
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+.campaigns-list {
+  text-align: left;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.campaigns-list h2 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.campaigns-list ul {
+  list-style: none;
+  padding: 0;
+}
+
+.campaigns-list li {
+  background: #f8f9fa;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  border-left: 4px solid #646cff;
+}
+
+.error {
+  color: #dc3545;
+  background-color: #f8d7da;
+  padding: 1rem;
+  border-radius: 4px;
+  margin: 1rem 0;
+  border: 1px solid #f5c6cb;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .app-header {
+    border-bottom-color: #444;
+  }
+
+  .user-info span {
+    color: #ccc;
+  }
+
+  .campaigns-list h2 {
+    color: #fff;
+  }
+
+  .campaigns-list li {
+    background: #333;
+    color: #fff;
+  }
+
+  .error {
+    background-color: #2d1b1f;
+    color: #f8d7da;
+    border-color: #842029;
+  }
 }
