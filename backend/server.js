@@ -12,28 +12,19 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
-// Database connection configuration
+// Database connection pool
 const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
-  database: process.env.DB_NAME || 'your_database_name',
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   port: process.env.DB_PORT || 3306,
-  insecureAuth: true
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 };
 
-// Database connection pool
-let db;
-
-async function connectDB() {
-  try {
-    db = await mysql.createPool(dbConfig);
-    console.log('✅ Connected to MariaDB database');
-  } catch (error) {
-    console.error('❌ Database connection failed:', error);
-    process.exit(1);
-  }
-}
+const pool = mysql.createPool(dbConfig);
 
 
 // --- API Routes ---
@@ -50,15 +41,17 @@ app.post('/api/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // Find user in database
-    const conn = await db.getConnection();
+    // ✅ **FIX**: Declare 'rows' here so it's accessible throughout the function
+    let rows = []; 
+    const conn = await pool.getConnection();
     try {
-      const [rows] = await conn.execute(
+      // Find user by username first
+      [rows] = await conn.execute(
         'SELECT id, username, password, role FROM users WHERE username = ?',
         [username]
       );
-      // continue as before...
     } finally {
+      // Always release the connection
       conn.release();
     }
 
@@ -78,7 +71,7 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    // Return success response with user info only
+    // Return success response with user info
     res.json({
       success: true,
       user: {
@@ -92,14 +85,13 @@ app.post('/api/login', async (req, res) => {
     console.error('Login error details:', error);
     res.status(500).json({
       error: 'Internal server error',
-      details: error.message // This will help us debug
+      details: error.message
     });
   }
 });
 
 // Get campaigns route (no authentication required)
 app.get('/api/campaigns', (req, res) => {
-  // In the future, you'll get this data from your database
   const sampleCampaigns = [
     { id: 1, name: 'tests', client: 'Nike' },
     { id: 2, name: 'Back to School', client: 'Adidas' },
@@ -107,17 +99,21 @@ app.get('/api/campaigns', (req, res) => {
   res.json(sampleCampaigns);
 });
 
+
+// --- Start Server ---
 async function startServer() {
   try {
-    // First, connect to the database and wait for it to finish
-    await connectDB();
-
-    // Then, start the Express server
+    // Test the database connection on startup
+    const connection = await pool.getConnection();
+    console.log('✅ Connected to MariaDB database');
+    connection.release();
+    
+    // Start the Express server
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server:', error);
+    console.error('❌ Failed to start server or connect to DB:', error);
     process.exit(1);
   }
 }
