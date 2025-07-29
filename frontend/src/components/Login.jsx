@@ -53,9 +53,11 @@ function Login({ onLogin }) {
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>
+        <h2>Login to Poster Management </h2>
         
-        {error && <div className="error-message">{error}</div>}
+        <div className={`error-message ${!error ? 'hidden' : ''}`}>
+          {error || '\u00A0'}
+        </div>
         
         <div className="form-group">
           <label htmlFor="username">Username:</label>
