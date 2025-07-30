@@ -106,31 +106,7 @@ function App() {
         {/* Client users see their campaign management interface */}
         {user.role === 'client' && <ClientCampaignManagement token={token} user={user} />}
         
-        {/* Employee campaigns view and other users' default campaign view */}
-        {(user.role !== 'employee' || activeTab === 'campaigns') && user.role !== 'client' && (
-          <>
-            {error ? (
-              <div className="error">Error: {error}</div>
-            ) : (
-              <div className="campaigns-list">
-                <h2>Your Campaigns</h2>
-                {campaigns.length === 0 ? (
-                  <p>No campaigns found.</p>
-                ) : (
-                  <ul>
-                    {campaigns.map((campaign) => (
-                      <li key={campaign.id}>
-                        <strong>{campaign.name}</strong> for {campaign.company_name || 'Unknown Company'}
-                        <div>Status: {campaign.status}</div>
-                        {campaign.description && <div>{campaign.description}</div>}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            )}
-          </>
-        )}
+  
         
         {/* Employee campaigns view when on campaigns tab */}
         {user.role === 'employee' && activeTab === 'campaigns' && (
