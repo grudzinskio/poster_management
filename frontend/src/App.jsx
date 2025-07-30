@@ -74,7 +74,7 @@ function App() {
         {error ? (
           <div className="error">Error: {error}</div>
         ) : (
-          <div className="campaigns-list" align="left">
+          <div className="campaigns-list">
             <h2>Your Campaigns</h2>
             {campaigns.length === 0 ? (
               <p>No campaigns found.</p>
