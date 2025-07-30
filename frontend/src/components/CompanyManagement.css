@@ -1,0 +1,200 @@
+/* frontend/src/components/CompanyManagement.css */
+
+.company-management-container {
+  background-color: #fdfdfd;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+  text-align: left;
+}
+
+.company-management-container h3 {
+  margin-top: 0;
+  border-bottom: 2px solid #646cff;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Add Company Form */
+.add-company-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.add-company-form h4 {
+  grid-column: 1 / -1;
+  margin-bottom: 0.5rem;
+}
+
+.add-company-form input {
+  padding: 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-size: 0.9rem;
+}
+
+.add-company-form .form-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+
+.add-company-form .submit-button {
+  grid-column: 1 / -1;
+  justify-self: start;
+  padding: 0.5rem 1rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-company-form .submit-button:hover {
+  background-color: #218838;
+}
+
+/* Companies Table */
+.companies-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+
+.companies-table th, .companies-table td {
+  border: 1px solid #ddd;
+  padding: 0.75rem;
+  text-align: left;
+}
+
+.companies-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.companies-table .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.companies-table .edit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.companies-table .edit-btn:hover {
+  background-color: #0056b3;
+}
+
+.companies-table .delete-btn {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.companies-table .delete-btn:hover {
+  background-color: #c82333;
+}
+
+.companies-table .cancel-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.companies-table .cancel-btn:hover {
+  background-color: #545b62;
+}
+
+.companies-table .save-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.companies-table .save-btn:hover {
+  background-color: #218838;
+}
+
+.companies-table input {
+  width: 100%;
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.error-message {
+  color: #dc3545;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.success-message {
+  color: #155724;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .company-management-container {
+    background-color: #2a2a2a;
+    border-color: #444;
+  }
+  
+  .companies-table th {
+    background-color: #333;
+  }
+  
+  .companies-table th, .companies-table td {
+    border-color: #444;
+  }
+  
+  .add-company-form input,
+  .companies-table input {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+  }
+  
+  .error-message {
+    background-color: #2d1b1f;
+    color: #f8d7da;
+    border-color: #842029;
+  }
+  
+  .success-message {
+    background-color: #1e2f23;
+    color: #d4edda;
+    border-color: #28a745;
+  }
+}

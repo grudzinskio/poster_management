@@ -98,23 +98,130 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+// --- COMPANY MANAGEMENT ROUTES (FOR EMPLOYEES) ---
+
+// GET all companies
+app.get('/api/companies', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const [rows] = await conn.execute('SELECT id, name FROM companies ORDER BY name');
+        conn.release();
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching companies:', error);
+        res.status(500).json({ error: 'Failed to fetch companies' });
+    }
+});
+
+// CREATE a new company
+app.post('/api/companies', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { name } = req.body;
+    if (!name) {
+        return res.status(400).json({ error: 'Company name is required' });
+    }
+    
+    try {
+        const conn = await pool.getConnection();
+        const [result] = await conn.execute(
+            'INSERT INTO companies (name) VALUES (?)',
+            [name]
+        );
+        conn.release();
+        
+        res.status(201).json({ 
+            id: result.insertId, 
+            name
+        });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Company name already exists' });
+        }
+        console.error('Error creating company:', error);
+        res.status(500).json({ error: 'Failed to create company' });
+    }
+});
+
+// UPDATE a company
+app.put('/api/companies/:id', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { id } = req.params;
+    const { name } = req.body;
+    
+    if (!name) {
+        return res.status(400).json({ error: 'Company name is required' });
+    }
+    
+    try {
+        const conn = await pool.getConnection();
+        const [result] = await conn.execute(
+            'UPDATE companies SET name = ? WHERE id = ?',
+            [name, id]
+        );
+        conn.release();
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Company not found' });
+        }
+        
+        res.json({ id: parseInt(id), name });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Company name already exists' });
+        }
+        console.error('Error updating company:', error);
+        res.status(500).json({ error: 'Failed to update company' });
+    }
+});
+
+// DELETE a company
+app.delete('/api/companies/:id', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { id } = req.params;
+    
+    try {
+        const conn = await pool.getConnection();
+        
+        // Check if any users are associated with this company
+        const [userCheck] = await conn.execute('SELECT COUNT(*) as count FROM users WHERE company_id = ?', [id]);
+        if (userCheck[0].count > 0) {
+            conn.release();
+            return res.status(400).json({ error: 'Cannot delete company with associated users. Please reassign users first.' });
+        }
+        
+        const [result] = await conn.execute('DELETE FROM companies WHERE id = ?', [id]);
+        conn.release();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Company not found' });
+        }
+        res.status(204).send();
+    } catch (error) {
+        console.error('Error deleting company:', error);
+        res.status(500).json({ error: 'Failed to delete company' });
+    }
+});
+
 // --- USER MANAGEMENT ROUTES (FOR EMPLOYEES) ---
 
 // GET all users
 app.get('/api/users', authenticateToken, authorizeRole('employee'), async (req, res) => {
     try {
         const conn = await pool.getConnection();
-        const [rows] = await conn.execute('SELECT id, username, role FROM users');
+        const [rows] = await conn.execute(`
+            SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
+            FROM users u
+            LEFT JOIN companies c ON u.company_id = c.id
+            ORDER BY u.username
+        `);
         conn.release();
         res.json(rows);
     } catch (error) {
+        console.error('Error fetching users:', error);
         res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
 
 // CREATE a new user
 app.post('/api/users', authenticateToken, authorizeRole('employee'), async (req, res) => {
-    const { username, password, role } = req.body;
+    const { username, password, role, company_id } = req.body;
     if (!username || !password || !role) {
         return res.status(400).json({ error: 'Username, password, and role are required' });
     }
@@ -123,17 +230,68 @@ app.post('/api/users', authenticateToken, authorizeRole('employee'), async (req,
         const conn = await pool.getConnection();
         // Storing plaintext password
         const [result] = await conn.execute(
-            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-            [username, password, role]
+            'INSERT INTO users (username, password, role, company_id) VALUES (?, ?, ?, ?)',
+            [username, password, role, company_id || null]
         );
+        
+        // Get the created user with company info
+        const [userRows] = await conn.execute(`
+            SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
+            FROM users u
+            LEFT JOIN companies c ON u.company_id = c.id
+            WHERE u.id = ?
+        `, [result.insertId]);
+        
         conn.release();
         
-        res.status(201).json({ id: result.insertId, username, role });
+        res.status(201).json(userRows[0]);
     } catch (error) {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(409).json({ error: 'Username already exists' });
         }
+        console.error('Error creating user:', error);
         res.status(500).json({ error: 'Failed to create user' });
+    }
+});
+
+// UPDATE a user (including company assignment)
+app.put('/api/users/:id', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { id } = req.params;
+    const { username, role, company_id } = req.body;
+    
+    if (!username || !role) {
+        return res.status(400).json({ error: 'Username and role are required' });
+    }
+    
+    try {
+        const conn = await pool.getConnection();
+        const [result] = await conn.execute(
+            'UPDATE users SET username = ?, role = ?, company_id = ? WHERE id = ?',
+            [username, role, company_id || null, id]
+        );
+        
+        if (result.affectedRows === 0) {
+            conn.release();
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        // Get the updated user with company info
+        const [userRows] = await conn.execute(`
+            SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
+            FROM users u
+            LEFT JOIN companies c ON u.company_id = c.id
+            WHERE u.id = ?
+        `, [id]);
+        
+        conn.release();
+        
+        res.json(userRows[0]);
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Username already exists' });
+        }
+        console.error('Error updating user:', error);
+        res.status(500).json({ error: 'Failed to update user' });
     }
 });
 

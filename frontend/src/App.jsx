@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import UserManagement from './components/UserManagement';
+import CompanyManagement from './components/CompanyManagement';
 import './App.css';
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
+  const [activeTab, setActiveTab] = useState('campaigns');
 
   const fetchCampaigns = async (authToken) => {
     try {
@@ -51,6 +53,7 @@ function App() {
     setCampaigns([]);
     setError(null);
     setShowLogin(true);
+    setActiveTab('campaigns');
   };
 
   if (showLogin) {
@@ -70,24 +73,53 @@ function App() {
       </header>
 
       <main>
-        {user.role === 'employee' && <UserManagement token={token} />}
-        {error ? (
-          <div className="error">Error: {error}</div>
-        ) : (
-          <div className="campaigns-list">
-            <h2>Your Campaigns</h2>
-            {campaigns.length === 0 ? (
-              <p>No campaigns found.</p>
-            ) : (
-              <ul>
-                {campaigns.map((campaign) => (
-                  <li key={campaign.id}>
-                    <strong>{campaign.name}</strong> for {campaign.client}
-                  </li>
-                ))}
-              </ul>
-            )}
+        {user.role === 'employee' && (
+          <div className="employee-tabs">
+            <button 
+              className={`tab-button ${activeTab === 'campaigns' ? 'active' : ''}`}
+              onClick={() => setActiveTab('campaigns')}
+            >
+              Campaigns
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+              onClick={() => setActiveTab('users')}
+            >
+              User Management
+            </button>
+            <button 
+              className={`tab-button ${activeTab === 'companies' ? 'active' : ''}`}
+              onClick={() => setActiveTab('companies')}
+            >
+              Company Management
+            </button>
           </div>
+        )}
+
+        {user.role === 'employee' && activeTab === 'users' && <UserManagement token={token} />}
+        {user.role === 'employee' && activeTab === 'companies' && <CompanyManagement token={token} />}
+        
+        {(user.role !== 'employee' || activeTab === 'campaigns') && (
+          <>
+            {error ? (
+              <div className="error">Error: {error}</div>
+            ) : (
+              <div className="campaigns-list">
+                <h2>Your Campaigns</h2>
+                {campaigns.length === 0 ? (
+                  <p>No campaigns found.</p>
+                ) : (
+                  <ul>
+                    {campaigns.map((campaign) => (
+                      <li key={campaign.id}>
+                        <strong>{campaign.name}</strong> for {campaign.client}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
         )}
       </main>
     </div>

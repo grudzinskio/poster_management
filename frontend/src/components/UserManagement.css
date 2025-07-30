@@ -19,16 +19,22 @@
 
 /* Add User Form */
 .add-user-form {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 0.5rem;
-  align-items: center;
   margin-bottom: 1.5rem;
-  flex-wrap: wrap;
 }
 
 .add-user-form h4 {
-    width: 100%;
-    margin-bottom: 0.5rem;
+  grid-column: 1 / -1;
+  margin-bottom: 0.5rem;
+}
+
+.add-user-form .form-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.5rem;
 }
 
 .add-user-form input,
@@ -39,7 +45,9 @@
   font-size: 0.9rem;
 }
 
-.add-user-form button {
+.add-user-form .submit-button {
+  grid-column: 1 / -1;
+  justify-self: start;
   padding: 0.5rem 1rem;
   background-color: #28a745;
   color: white;
@@ -49,7 +57,7 @@
   transition: background-color 0.2s;
 }
 
-.add-user-form button:hover {
+.add-user-form .submit-button:hover {
   background-color: #218838;
 }
 
@@ -57,6 +65,7 @@
 .users-table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 0.9rem;
 }
 
 .users-table th, .users-table td {
@@ -67,6 +76,27 @@
 
 .users-table th {
   background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.users-table .action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.users-table .edit-btn {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.users-table .edit-btn:hover {
+  background-color: #0056b3;
 }
 
 .users-table .delete-btn {
@@ -76,15 +106,93 @@
   padding: 0.3rem 0.6rem;
   border-radius: 4px;
   cursor: pointer;
+  font-size: 0.8rem;
 }
 
 .users-table .delete-btn:hover {
   background-color: #c82333;
 }
 
+.users-table .save-btn {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.users-table .save-btn:hover {
+  background-color: #218838;
+}
+
+.users-table .cancel-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.3rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.users-table .cancel-btn:hover {
+  background-color: #545b62;
+}
+
+.users-table input,
+.users-table select {
+  width: 100%;
+  padding: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
 .error-message {
   color: #dc3545;
   margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+}
+
+.success-message {
+  color: #155724;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+  border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .users-table {
+    font-size: 0.8rem;
+  }
+  
+  .users-table th, .users-table td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .add-user-form {
+    grid-template-columns: 1fr;
+  }
+  
+  .add-user-form .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .users-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -98,9 +206,24 @@
     .users-table th, .users-table td {
         border-color: #444;
     }
-    .add-user-form input, .add-user-form select {
+    .add-user-form input, 
+    .add-user-form select,
+    .users-table input,
+    .users-table select {
         background-color: #333;
         border-color: #555;
         color: #fff;
+    }
+    
+    .error-message {
+      background-color: #2d1b1f;
+      color: #f8d7da;
+      border-color: #842029;
+    }
+    
+    .success-message {
+      background-color: #1e2f23;
+      color: #d4edda;
+      border-color: #28a745;
     }
 }
