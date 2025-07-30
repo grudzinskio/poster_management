@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import UserManagement from './components/UserManagement';
 import CompanyManagement from './components/CompanyManagement';
+import ClientCampaignManagement from './components/ClientCampaignManagement';
 import './App.css';
 
 function App() {
@@ -65,7 +66,10 @@ function App() {
       <header className="app-header">
         <h1>Poster Campaigns</h1>
         <div className="user-info">
-          <span>Welcome, {user.username} ({user.role})</span>
+          <span>
+            Welcome, {user.username} ({user.role})
+            {user.company_name && ` - ${user.company_name}`}
+          </span>
           <button onClick={handleLogout} className="logout-button">
             Logout
           </button>
@@ -99,7 +103,11 @@ function App() {
         {user.role === 'employee' && activeTab === 'users' && <UserManagement token={token} />}
         {user.role === 'employee' && activeTab === 'companies' && <CompanyManagement token={token} />}
         
-        {(user.role !== 'employee' || activeTab === 'campaigns') && (
+        {/* Client users see their campaign management interface */}
+        {user.role === 'client' && <ClientCampaignManagement token={token} user={user} />}
+        
+        {/* Employee campaigns view and other users' default campaign view */}
+        {(user.role !== 'employee' || activeTab === 'campaigns') && user.role !== 'client' && (
           <>
             {error ? (
               <div className="error">Error: {error}</div>
@@ -112,7 +120,35 @@ function App() {
                   <ul>
                     {campaigns.map((campaign) => (
                       <li key={campaign.id}>
-                        <strong>{campaign.name}</strong> for {campaign.client}
+                        <strong>{campaign.name}</strong> for {campaign.company_name || 'Unknown Company'}
+                        <div>Status: {campaign.status}</div>
+                        {campaign.description && <div>{campaign.description}</div>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+          </>
+        )}
+        
+        {/* Employee campaigns view when on campaigns tab */}
+        {user.role === 'employee' && activeTab === 'campaigns' && (
+          <>
+            {error ? (
+              <div className="error">Error: {error}</div>
+            ) : (
+              <div className="campaigns-list">
+                <h2>All Campaigns</h2>
+                {campaigns.length === 0 ? (
+                  <p>No campaigns found.</p>
+                ) : (
+                  <ul>
+                    {campaigns.map((campaign) => (
+                      <li key={campaign.id}>
+                        <strong>{campaign.name}</strong> for {campaign.company_name || 'Unknown Company'}
+                        <div>Status: {campaign.status}</div>
+                        {campaign.description && <div>{campaign.description}</div>}
                       </li>
                     ))}
                   </ul>

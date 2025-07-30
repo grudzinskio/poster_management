@@ -1,7 +1,5 @@
 // backend/server.js
 require('dotenv').config({ path: '../.env' });
-console.log('JWT_SECRET:', process.env.JWT_SECRET);
-console.log('Database:', process.env.DB_NAME);
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
@@ -65,7 +63,7 @@ app.post('/api/login', async (req, res) => {
 
     const conn = await pool.getConnection();
     const [rows] = await conn.execute(
-      'SELECT id, username, password, role FROM users WHERE username = ?',
+      'SELECT u.id, u.username, u.password, u.role, u.company_id, c.name as company_name FROM users u LEFT JOIN companies c ON u.company_id = c.id WHERE u.username = ?',
       [username]
     );
     conn.release();
@@ -83,7 +81,13 @@ app.post('/api/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
     
-    const userPayload = { id: user.id, username: user.username, role: user.role };
+    const userPayload = { 
+      id: user.id, 
+      username: user.username, 
+      role: user.role, 
+      company_id: user.company_id,
+      company_name: user.company_name
+    };
     const accessToken = jwt.sign(userPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({
@@ -317,13 +321,153 @@ app.delete('/api/users/:id', authenticateToken, authorizeRole('employee'), async
 });
 
 // Get campaigns route
-app.get('/api/campaigns', authenticateToken, (req, res) => {
-  const sampleCampaigns = [
-    { id: 1, name: 'tests', client: 'Nike' },
-    { id: 2, name: 'Back to Sol', client: 'Adidas' },
-  ];
-  res.json(sampleCampaigns);
+app.get('/api/campaigns', authenticateToken, async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    let query, params;
+    
+    if (req.user.role === 'client') {
+      // Clients can only see campaigns for their company
+      query = `
+        SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
+        FROM campaigns c
+        JOIN companies co ON c.company_id = co.id
+        WHERE c.company_id = ?
+        ORDER BY c.created_at DESC
+      `;
+      params = [req.user.company_id];
+    } else {
+      // Employees can see all campaigns
+      query = `
+        SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
+        FROM campaigns c
+        JOIN companies co ON c.company_id = co.id
+        ORDER BY c.created_at DESC
+      `;
+      params = [];
+    }
+    
+    const [rows] = await conn.execute(query, params);
+    conn.release();
+    res.json(rows);
+  } catch (error) {
+    console.error('Error fetching campaigns:', error);
+    res.status(500).json({ error: 'Failed to fetch campaigns' });
+  }
 });
+
+// CREATE a new campaign (for clients)
+app.post('/api/campaigns', authenticateToken, async (req, res) => {
+  const { name, description, start_date, end_date } = req.body;
+  
+  if (!name || !description) {
+    return res.status(400).json({ error: 'Campaign name and description are required' });
+  }
+  
+  // Only clients and employees can create campaigns
+  if (req.user.role !== 'client' && req.user.role !== 'employee') {
+    return res.status(403).json({ error: 'Not authorized to create campaigns' });
+  }
+  
+  try {
+    const conn = await pool.getConnection();
+    
+    // For clients, use their company_id; for employees, company_id should be provided in request
+    const company_id = req.user.role === 'client' ? req.user.company_id : req.body.company_id;
+    
+    if (!company_id) {
+      conn.release();
+      return res.status(400).json({ error: 'Company ID is required' });
+    }
+    
+    const [result] = await conn.execute(
+      'INSERT INTO campaigns (name, description, company_id, status, start_date, end_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, description, company_id, 'pending', start_date || null, end_date || null, req.user.id]
+    );
+    
+    // Get the created campaign with company info
+    const [campaignRows] = await conn.execute(`
+      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
+      FROM campaigns c
+      JOIN companies co ON c.company_id = co.id
+      WHERE c.id = ?
+    `, [result.insertId]);
+    
+    conn.release();
+    res.status(201).json(campaignRows[0]);
+  } catch (error) {
+    console.error('Error creating campaign:', error);
+    res.status(500).json({ error: 'Failed to create campaign' });
+  }
+});
+
+// UPDATE campaign status (for employees)
+app.put('/api/campaigns/:id/status', authenticateToken, authorizeRole('employee'), async (req, res) => {
+  const { id } = req.params;
+  const { status } = req.body;
+  
+  if (!status || !['pending', 'approved', 'in_progress', 'completed', 'cancelled'].includes(status)) {
+    return res.status(400).json({ error: 'Valid status is required (pending, approved, in_progress, completed, cancelled)' });
+  }
+  
+  try {
+    const conn = await pool.getConnection();
+    const [result] = await conn.execute(
+      'UPDATE campaigns SET status = ? WHERE id = ?',
+      [status, id]
+    );
+    
+    if (result.affectedRows === 0) {
+      conn.release();
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    
+    // Get the updated campaign
+    const [campaignRows] = await conn.execute(`
+      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
+      FROM campaigns c
+      JOIN companies co ON c.company_id = co.id
+      WHERE c.id = ?
+    `, [id]);
+    
+    conn.release();
+    res.json(campaignRows[0]);
+  } catch (error) {
+    console.error('Error updating campaign status:', error);
+    res.status(500).json({ error: 'Failed to update campaign status' });
+  }
+});
+
+// --- DATABASE INITIALIZATION ---
+async function initializeDatabase() {
+  try {
+    const conn = await pool.getConnection();
+    
+    // Create campaigns table if it doesn't exist
+    await conn.execute(`
+      CREATE TABLE IF NOT EXISTS campaigns (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        description TEXT,
+        company_id INT,
+        status ENUM('pending', 'approved', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
+        start_date DATE,
+        end_date DATE,
+        created_by INT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (company_id) REFERENCES companies(id),
+        FOREIGN KEY (created_by) REFERENCES users(id)
+      )
+    `);
+    
+    conn.release();
+    console.log('✅ Database tables initialized');
+  } catch (error) {
+    console.error('❌ Error initializing database:', error);
+    throw error;
+  }
+}
 
 // --- Start Server ---
 async function startServer() {
@@ -331,6 +475,9 @@ async function startServer() {
     const connection = await pool.getConnection();
     console.log('✅ Connected to MariaDB database');
     connection.release();
+    
+    // Initialize database tables
+    await initializeDatabase();
     
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
