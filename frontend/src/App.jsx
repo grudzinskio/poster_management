@@ -71,11 +71,10 @@ function App() {
 
       <main>
         {user.role === 'employee' && <UserManagement token={token} />}
-
         {error ? (
           <div className="error">Error: {error}</div>
         ) : (
-          <div className="campaigns-list">
+          <div className="campaigns-list" align="left">
             <h2>Your Campaigns</h2>
             {campaigns.length === 0 ? (
               <p>No campaigns found.</p>
