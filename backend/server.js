@@ -162,7 +162,7 @@ app.delete('/api/users/:id', authenticateToken, authorizeRole('employee'), async
 app.get('/api/campaigns', authenticateToken, (req, res) => {
   const sampleCampaigns = [
     { id: 1, name: 'tests', client: 'Nike' },
-    { id: 2, name: 'Back to School', client: 'Adidas' },
+    { id: 2, name: 'Back to Sol', client: 'Adidas' },
   ];
   res.json(sampleCampaigns);
 });
