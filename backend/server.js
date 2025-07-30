@@ -1,10 +1,12 @@
 // backend/server.js
-
+require('dotenv').config({ path: '../.env' });
+console.log('JWT_SECRET:', process.env.JWT_SECRET);
+console.log('Database:', process.env.DB_NAME);
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2/promise');
+const jwt = require('jsonwebtoken'); // <-- Still need JWT
 
-require('dotenv').config({ path: '../.env' });
 
 const app = express();
 const PORT = 3001;
@@ -22,11 +24,34 @@ const dbConfig = {
   port: process.env.DB_PORT || 3306,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 };
 
 const pool = mysql.createPool(dbConfig);
 
+// --- AUTHENTICATION MIDDLEWARE ---
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
+
+const authorizeRole = (role) => {
+  return (req, res, next) => {
+    if (req.user.role !== role) {
+      return res.status(403).json({ error: 'Not authorized for this action' });
+    }
+    next();
+  };
+};
 
 // --- API Routes ---
 
@@ -34,29 +59,16 @@ const pool = mysql.createPool(dbConfig);
 app.post('/api/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-
-    console.log('Login attempt:', { username, passwordProvided: !!password });
-
-    // Validate input
     if (!username || !password) {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    // ✅ **FIX**: Declare 'rows' here so it's accessible throughout the function
-    let rows = []; 
     const conn = await pool.getConnection();
-    try {
-      // Find user by username first
-      [rows] = await conn.execute(
-        'SELECT id, username, password, role FROM users WHERE username = ?',
-        [username]
-      );
-    } finally {
-      // Always release the connection
-      conn.release();
-    }
-
-    console.log('Database query result:', rows.length > 0 ? 'User found' : 'User not found');
+    const [rows] = await conn.execute(
+      'SELECT id, username, password, role FROM users WHERE username = ?',
+      [username]
+    );
+    conn.release();
 
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -64,35 +76,90 @@ app.post('/api/login', async (req, res) => {
 
     const user = rows[0];
 
-    // Compare passwords directly (no hashing)
+    // Plaintext password comparison
     const isValidPassword = password === user.password;
-    console.log('Password validation:', isValidPassword ? 'Success' : 'Failed');
 
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
+    
+    const userPayload = { id: user.id, username: user.username, role: user.role };
+    const accessToken = jwt.sign(userPayload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
-    // Return success response with user info
     res.json({
       success: true,
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role
-      }
+      token: accessToken,
+      user: userPayload
     });
 
   } catch (error) {
-    console.error('Login error details:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      details: error.message
-    });
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Get campaigns route (no authentication required)
-app.get('/api/campaigns', (req, res) => {
+// --- USER MANAGEMENT ROUTES (FOR EMPLOYEES) ---
+
+// GET all users
+app.get('/api/users', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        const [rows] = await conn.execute('SELECT id, username, role FROM users');
+        conn.release();
+        res.json(rows);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch users' });
+    }
+});
+
+// CREATE a new user
+app.post('/api/users', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { username, password, role } = req.body;
+    if (!username || !password || !role) {
+        return res.status(400).json({ error: 'Username, password, and role are required' });
+    }
+    
+    try {
+        const conn = await pool.getConnection();
+        // Storing plaintext password
+        const [result] = await conn.execute(
+            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+            [username, password, role]
+        );
+        conn.release();
+        
+        res.status(201).json({ id: result.insertId, username, role });
+    } catch (error) {
+        if (error.code === 'ER_DUP_ENTRY') {
+            return res.status(409).json({ error: 'Username already exists' });
+        }
+        res.status(500).json({ error: 'Failed to create user' });
+    }
+});
+
+// DELETE a user
+app.delete('/api/users/:id', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { id } = req.params;
+    if (parseInt(id, 10) === req.user.id) {
+        return res.status(400).json({ error: "You cannot delete your own account."});
+    }
+
+    try {
+        const conn = await pool.getConnection();
+        const [result] = await conn.execute('DELETE FROM users WHERE id = ?', [id]);
+        conn.release();
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        res.status(204).send();
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
+// Get campaigns route
+app.get('/api/campaigns', authenticateToken, (req, res) => {
   const sampleCampaigns = [
     { id: 1, name: 'tests', client: 'Nike' },
     { id: 2, name: 'Back to School', client: 'Adidas' },
@@ -100,16 +167,13 @@ app.get('/api/campaigns', (req, res) => {
   res.json(sampleCampaigns);
 });
 
-
 // --- Start Server ---
 async function startServer() {
   try {
-    // Test the database connection on startup
     const connection = await pool.getConnection();
     console.log('✅ Connected to MariaDB database');
     connection.release();
     
-    // Start the Express server
     app.listen(PORT, () => {
       console.log(`🚀 Server is running on http://localhost:${PORT}`);
     });

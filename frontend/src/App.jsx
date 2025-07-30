@@ -2,18 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import Login from './components/Login';
+import UserManagement from './components/UserManagement';
 import './App.css';
 
 function App() {
   const [campaigns, setCampaigns] = useState([]);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
   const [showLogin, setShowLogin] = useState(true);
 
-  // Fetch campaigns data
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = async (authToken) => {
     try {
-      const response = await fetch('http://localhost:3001/api/campaigns');
+      const response = await fetch('http://localhost:3001/api/campaigns', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
 
       if (!response.ok) {
         throw new Error('Failed to fetch campaigns');
@@ -28,46 +33,45 @@ function App() {
     }
   };
 
-  // Fetch campaigns when user logs in
   useEffect(() => {
-    if (user) {
-      fetchCampaigns();
+    if (user && token) {
+      fetchCampaigns(token);
     }
-  }, [user]);
+  }, [user, token]);
 
-  // Handle successful login
-  const handleLogin = (userData) => {
-    setUser(userData);
+  const handleLogin = (loginData) => {
+    setUser(loginData.user);
+    setToken(loginData.token);
     setShowLogin(false);
   };
 
-  // Handle back to login (equivalent to logout)
-  const handleBackToLogin = () => {
+  const handleLogout = () => {
     setUser(null);
+    setToken(null);
     setCampaigns([]);
     setError(null);
     setShowLogin(true);
   };
 
-  // Always show login page first
   if (showLogin) {
     return <Login onLogin={handleLogin} />;
   }
 
-  // Show main app after login
   return (
     <div className="app-container">
       <header className="app-header">
         <h1>Poster Campaigns</h1>
         <div className="user-info">
           <span>Welcome, {user.username} ({user.role})</span>
-          <button onClick={handleBackToLogin} className="logout-button">
-            Back to Login
+          <button onClick={handleLogout} className="logout-button">
+            Logout
           </button>
         </div>
       </header>
 
       <main>
+        {user.role === 'employee' && <UserManagement token={token} />}
+
         {error ? (
           <div className="error">Error: {error}</div>
         ) : (

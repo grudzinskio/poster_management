@@ -16,7 +16,6 @@ function Login({ onLogin }) {
       ...formData,
       [e.target.name]: e.target.value
     });
-    // Clear error when user starts typing
     if (error) setError('');
   };
 
@@ -37,8 +36,7 @@ function Login({ onLogin }) {
       const data = await response.json();
 
       if (response.ok) {
-        // Call the onLogin callback to update parent component
-        onLogin(data.user);
+        onLogin(data);
       } else {
         setError(data.error || 'Login failed');
       }
@@ -53,7 +51,7 @@ function Login({ onLogin }) {
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login to Poster Management </h2>
+        <h2>Login to Poster Management</h2>
         
         <div className={`error-message ${!error ? 'hidden' : ''}`}>
           {error || '\u00A0'}
