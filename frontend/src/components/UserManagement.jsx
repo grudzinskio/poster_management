@@ -10,6 +10,9 @@ function UserManagement({ token }) {
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
+  const [changingPasswordId, setChangingPasswordId] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [passwordInputs, setPasswordInputs] = useState({});
   const [newUser, setNewUser] = useState({ 
     username: '', 
     password: '', 
@@ -111,6 +114,53 @@ function UserManagement({ token }) {
     }
   };
 
+  const handleChangePassword = (userId) => {
+    setChangingPasswordId(userId);
+    setPasswordInputs(prev => ({ ...prev, [userId]: '' }));
+    setError('');
+    setSuccess('');
+  };
+
+  const handlePasswordInputChange = (userId, value) => {
+    setPasswordInputs(prev => ({ ...prev, [userId]: value }));
+  };
+
+  const handleSavePassword = async (userId) => {
+    const password = passwordInputs[userId] || '';
+    if (!password || password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return;
+    }
+    
+    setError('');
+    setSuccess('');
+    
+    try {
+      await put(`/users/${userId}/password`, { password });
+      setChangingPasswordId(null);
+      setPasswordInputs(prev => {
+        const newInputs = { ...prev };
+        delete newInputs[userId];
+        return newInputs;
+      });
+      setSuccess('Password updated successfully!');
+    } catch (err) {
+      // Error is already set by useApi hook
+    }
+  };
+
+  const handleCancelPasswordChange = () => {
+    const userId = changingPasswordId;
+    setChangingPasswordId(null);
+    setPasswordInputs(prev => {
+      const newInputs = { ...prev };
+      delete newInputs[userId];
+      return newInputs;
+    });
+    setError('');
+    setSuccess('');
+  };
+
   const UserRow = ({ user }) => {
     const [editData, setEditData] = useState({
       username: user.username,
@@ -187,6 +237,12 @@ function UserManagement({ token }) {
               Edit
             </button>
             <button
+              className="password-btn"
+              onClick={() => handleChangePassword(user.id)}
+            >
+              Change Password
+            </button>
+            <button
               className="delete-btn"
               onClick={() => handleDeleteUser(user.id)}
             >
@@ -197,6 +253,43 @@ function UserManagement({ token }) {
       </tr>
     );
   };
+
+  // Password change row component
+  const PasswordChangeRow = ({ userId }) => (
+    <tr key={`password-${userId}`} className="password-change-row">
+      <td colSpan="4">
+        <div className="password-change-form">
+          <label htmlFor={`new-password-${userId}`}>New Password:</label>
+          <input
+            type="password"
+            id={`new-password-${userId}`}
+            value={passwordInputs[userId] || ''}
+            onChange={(e) => handlePasswordInputChange(userId, e.target.value)}
+            placeholder="Enter new password (min 6 characters)"
+            minLength="6"
+            required
+            autoFocus
+          />
+        </div>
+      </td>
+      <td>
+        <div className="action-buttons">
+          <button
+            className="save-btn"
+            onClick={() => handleSavePassword(userId)}
+          >
+            Save Password
+          </button>
+          <button
+            className="cancel-btn"
+            onClick={handleCancelPasswordChange}
+          >
+            Cancel
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
 
   return (
     <div className="user-management-container">
@@ -254,7 +347,12 @@ function UserManagement({ token }) {
           </thead>
           <tbody>
             {users.map((user) => (
-              <UserRow key={user.id} user={user} />
+              <>
+                <UserRow key={user.id} user={user} />
+                {changingPasswordId === user.id && (
+                  <PasswordChangeRow key={`password-${user.id}`} userId={user.id} />
+                )}
+              </>
             ))}
           </tbody>
         </table>

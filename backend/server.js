@@ -9,6 +9,7 @@ const express = require('express');         // Express.js - Web application fram
 const cors = require('cors');               // CORS - Cross-Origin Resource Sharing middleware
 const mysql = require('mysql2/promise');    // MySQL2 - MySQL client with Promise support for database operations
 const jwt = require('jsonwebtoken');        // JWT - JSON Web Token library for authentication
+const bcrypt = require('bcrypt');           // bcrypt - Secure password hashing library
 
 // Express.js application instance
 const app = express();
@@ -77,7 +78,7 @@ const authorizeRole = (role) => {
 /**
  * Login endpoint - User authentication
  * POST /api/login
- * Uses plaintext password comparison (Note: Should use bcrypt for production)
+ * Uses bcrypt for secure password comparison
  * Returns JWT token on successful authentication
  */
 app.post('/api/login', async (req, res) => {
@@ -102,8 +103,30 @@ app.post('/api/login', async (req, res) => {
 
     const user = rows[0];
 
-    // Password verification (plaintext comparison - should use bcrypt in production)
-    const isValidPassword = password === user.password;
+    // Password verification - handle both plaintext and hashed passwords
+    let isValidPassword = false;
+    
+    // Check if password is already hashed (bcrypt hashes are always 60 characters)
+    if (user.password.length === 60 && user.password.startsWith('$2')) {
+      // It's a bcrypt hash, use bcrypt.compare
+      isValidPassword = await bcrypt.compare(password, user.password);
+    } else {
+      // It's plaintext, do direct comparison
+      isValidPassword = (password === user.password);
+      
+      // Auto-migrate this password to hashed format
+      if (isValidPassword) {
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        const conn2 = await pool.getConnection();
+        await conn2.execute(
+          'UPDATE users SET password = ? WHERE id = ?',
+          [hashedPassword, user.id]
+        );
+        conn2.release();
+        console.log(`Auto-migrated password for user: ${user.username}`);
+      }
+    }
 
     if (!isValidPassword) {
       return res.status(401).json({ error: 'Invalid username or password' });
@@ -288,7 +311,7 @@ app.get('/api/users', authenticateToken, authorizeRole('employee'), async (req, 
  * POST /api/users - Create a new user
  * Requires: Authentication + Employee role
  * Body: { username, password, role, company_id? }
- * Note: Stores plaintext passwords (should use bcrypt in production)
+ * Note: Passwords are securely hashed using bcrypt before storage
  */
 // CREATE a new user
 app.post('/api/users', authenticateToken, authorizeRole('employee'), async (req, res) => {
@@ -298,11 +321,15 @@ app.post('/api/users', authenticateToken, authorizeRole('employee'), async (req,
     }
     
     try {
+        // Hash the password before storing it
+        const saltRounds = 12; // Higher salt rounds for better security
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
         const conn = await pool.getConnection();
-        // Store plaintext password (should be hashed with bcrypt in production)
+        // Store hashed password instead of plaintext
         const [result] = await conn.execute(
             'INSERT INTO users (username, password, role, company_id) VALUES (?, ?, ?, ?)',
-            [username, password, role, company_id || null]
+            [username, hashedPassword, role, company_id || null]
         );
         
         // Retrieve the created user with company information using JOIN
@@ -373,6 +400,50 @@ app.put('/api/users/:id', authenticateToken, authorizeRole('employee'), async (r
 });
 
 /**
+ * PUT /api/users/:id/password - Update user password
+ * Requires: Authentication + Employee role
+ * Params: id (user ID)
+ * Body: { password: string }
+ * Note: Passwords are securely hashed using bcrypt before storage
+ */
+// UPDATE user password
+app.put('/api/users/:id/password', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
+    
+    if (!password) {
+        return res.status(400).json({ error: 'Password is required' });
+    }
+    
+    if (password.length < 6) {
+        return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+    
+    try {
+        // Hash the new password
+        const saltRounds = 12;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+        
+        const conn = await pool.getConnection();
+        const [result] = await conn.execute(
+            'UPDATE users SET password = ? WHERE id = ?',
+            [hashedPassword, id]
+        );
+        
+        conn.release();
+        
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+        
+        res.json({ success: true, message: 'Password updated successfully' });
+    } catch (error) {
+        console.error('Error updating password:', error);
+        res.status(500).json({ error: 'Failed to update password' });
+    }
+});
+
+/**
  * DELETE /api/users/:id - Delete a user
  * Requires: Authentication + Employee role
  * Params: id (user ID)
@@ -422,6 +493,58 @@ app.delete('/api/users/:id', authenticateToken, authorizeRole('employee'), async
         }
         
         res.status(500).json({ error: 'Failed to delete user' });
+    }
+});
+
+/**
+ * POST /api/migrate-passwords - Migrate plaintext passwords to hashed passwords
+ * Requires: Authentication + Employee role
+ * Note: This is a one-time migration utility for existing users
+ * WARNING: Only run this once on production data
+ */
+app.post('/api/migrate-passwords', authenticateToken, authorizeRole('employee'), async (req, res) => {
+    try {
+        const conn = await pool.getConnection();
+        
+        // Get all users with plaintext passwords (assume they're shorter than typical bcrypt hashes)
+        // Bcrypt hashes are always 60 characters, so we can identify plaintext by length
+        const [users] = await conn.execute(
+            'SELECT id, username, password FROM users WHERE LENGTH(password) < 60'
+        );
+        
+        if (users.length === 0) {
+            conn.release();
+            return res.json({ 
+                success: true, 
+                message: 'No plaintext passwords found. All passwords are already hashed.',
+                migrated: 0 
+            });
+        }
+        
+        let migratedCount = 0;
+        const saltRounds = 12;
+        
+        // Hash each plaintext password
+        for (const user of users) {
+            const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+            await conn.execute(
+                'UPDATE users SET password = ? WHERE id = ?',
+                [hashedPassword, user.id]
+            );
+            migratedCount++;
+        }
+        
+        conn.release();
+        
+        res.json({ 
+            success: true, 
+            message: `Successfully migrated ${migratedCount} user password(s) to secure hashes.`,
+            migrated: migratedCount 
+        });
+        
+    } catch (error) {
+        console.error('Error migrating passwords:', error);
+        res.status(500).json({ error: 'Failed to migrate passwords' });
     }
 });
 
