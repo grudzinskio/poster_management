@@ -1,0 +1,24 @@
+// routes/auth.js
+// Authentication routes
+
+const express = require('express');
+const router = express.Router();
+const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const { login, migratePasswords } = require('../controllers/authController');
+
+/**
+ * POST /api/login - User authentication
+ * Uses bcrypt for secure password comparison
+ * Returns JWT token on successful authentication
+ */
+router.post('/login', login);
+
+/**
+ * POST /api/migrate-passwords - Migrate plaintext passwords to hashed passwords
+ * Requires: Authentication + Employee role
+ * Note: This is a one-time migration utility for existing users
+ * WARNING: Only run this once on production data
+ */
+router.post('/migrate-passwords', authenticateToken, authorizeRole('employee'), migratePasswords);
+
+module.exports = router;
