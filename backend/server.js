@@ -388,6 +388,15 @@ app.delete('/api/users/:id', authenticateToken, authorizeRole('employee'), async
 
     try {
         const conn = await pool.getConnection();
+        
+        // First, update any campaigns created by this user to set created_by to NULL
+        // This maintains the campaign-company association while removing the user reference
+        await conn.execute(
+            'UPDATE campaigns SET created_by = NULL WHERE created_by = ?',
+            [id]
+        );
+        
+        // Now safely delete the user
         const [result] = await conn.execute('DELETE FROM users WHERE id = ?', [id]);
         conn.release();
 
@@ -396,6 +405,22 @@ app.delete('/api/users/:id', authenticateToken, authorizeRole('employee'), async
         }
         res.status(204).send();
     } catch (error) {
+        console.error('Error deleting user:', error);
+        
+        // Handle specific database constraint errors
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') {
+            return res.status(400).json({ 
+                error: 'Cannot delete user because they have associated data. Please contact an administrator.' 
+            });
+        }
+        
+        // Handle other specific MySQL errors
+        if (error.code) {
+            return res.status(500).json({ 
+                error: `Database error: ${error.code} - ${error.sqlMessage}` 
+            });
+        }
+        
         res.status(500).json({ error: 'Failed to delete user' });
     }
 });
