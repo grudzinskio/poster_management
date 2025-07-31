@@ -1,0 +1,388 @@
+/* frontend/src/components/EmployeeCampaignManagement.css */
+
+.employee-campaign-container {
+  background-color: #fdfdfd;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #eee;
+  text-align: left;
+}
+
+.employee-campaign-container h3 {
+  margin-top: 0;
+  border-bottom: 2px solid #646cff;
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Add Campaign Form */
+.add-campaign-form {
+  background-color: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px solid #e9ecef;
+}
+
+.add-campaign-form h4 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.submit-button {
+  background-color: #28a745;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.submit-button:hover {
+  background-color: #218838;
+}
+
+.submit-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Campaigns Section */
+.campaigns-section h4 {
+  margin-bottom: 1rem;
+  color: #333;
+}
+
+.campaigns-table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+}
+
+.campaigns-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.campaigns-table th,
+.campaigns-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.campaigns-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+  position: sticky;
+  top: 0;
+}
+
+.campaigns-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+.description-cell {
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-pending {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-approved {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-in_progress {
+  background-color: #cce7ff;
+  color: #004085;
+  border: 1px solid #b3d7ff;
+}
+
+.status-completed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.status-cancelled {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.edit-btn, .save-btn, .cancel-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.edit-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.edit-btn:hover {
+  background-color: #0056b3;
+}
+
+.save-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.save-btn:hover {
+  background-color: #218838;
+}
+
+.cancel-btn {
+  background-color: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background-color: #545b62;
+}
+
+.status-select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  min-width: 120px;
+}
+
+/* Edit mode styles */
+.editing-row {
+  background-color: #fff3cd !important;
+}
+
+.edit-input,
+.edit-textarea,
+.edit-select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.edit-textarea {
+  resize: vertical;
+  min-height: 50px;
+}
+
+.no-campaigns {
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px dashed #ccc;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #f5c6cb;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #c3e6cb;
+}
+
+.loading {
+  text-align: center;
+  color: #666;
+  padding: 2rem;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .campaigns-table-container {
+    overflow-x: scroll;
+  }
+  
+  .campaigns-table {
+    min-width: 1000px;
+  }
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+  
+  .edit-btn,
+  .save-btn,
+  .cancel-btn,
+  .status-select {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    min-width: auto;
+  }
+  
+  .campaigns-table th,
+  .campaigns-table td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .employee-campaign-container {
+    background-color: #1a1a1a;
+    border-color: #333;
+  }
+  
+  .employee-campaign-container h3,
+  .add-campaign-form h4,
+  .campaigns-section h4 {
+    color: #fff;
+  }
+  
+  .add-campaign-form {
+    background-color: #2a2a2a;
+    border-color: #444;
+  }
+  
+  .form-group label {
+    color: #fff;
+  }
+  
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+  }
+  
+  .campaigns-table {
+    background-color: #2a2a2a;
+  }
+  
+  .campaigns-table th {
+    background-color: #333;
+    color: #fff;
+  }
+  
+  .campaigns-table td {
+    border-color: #444;
+    color: #fff;
+  }
+  
+  .campaigns-table tr:hover {
+    background-color: #333;
+  }
+  
+  .editing-row {
+    background-color: #3a3a00 !important;
+  }
+  
+  .edit-input,
+  .edit-textarea,
+  .edit-select,
+  .status-select {
+    background-color: #333;
+    border-color: #555;
+    color: #fff;
+  }
+  
+  .no-campaigns {
+    background-color: #2a2a2a;
+    border-color: #555;
+    color: #ccc;
+  }
+}

@@ -647,6 +647,54 @@ app.post('/api/campaigns', authenticateToken, async (req, res) => {
 });
 
 /**
+ * PUT /api/campaigns/:id - Update campaign details
+ * Requires: Authentication + Employee role
+ * Params: id (campaign ID)
+ * Body: { name?, description?, start_date?, end_date?, company_id? }
+ * Only employees can update campaign details
+ */
+// UPDATE campaign details (for employees)
+app.put('/api/campaigns/:id', authenticateToken, authorizeRole('employee'), async (req, res) => {
+  const { id } = req.params;
+  const { name, description, start_date, end_date, company_id } = req.body;
+  
+  if (!name || !description) {
+    return res.status(400).json({ error: 'Campaign name and description are required' });
+  }
+  
+  try {
+    const conn = await pool.getConnection();
+    
+    // Verify campaign exists
+    const [existingCampaign] = await conn.execute('SELECT id FROM campaigns WHERE id = ?', [id]);
+    if (existingCampaign.length === 0) {
+      conn.release();
+      return res.status(404).json({ error: 'Campaign not found' });
+    }
+    
+    // Update campaign
+    const [result] = await conn.execute(
+      'UPDATE campaigns SET name = ?, description = ?, start_date = ?, end_date = ?, company_id = ? WHERE id = ?',
+      [name, description, start_date || null, end_date || null, company_id, id]
+    );
+    
+    // Retrieve the updated campaign with company information
+    const [campaignRows] = await conn.execute(`
+      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, c.company_id, co.name as company_name
+      FROM campaigns c
+      JOIN companies co ON c.company_id = co.id
+      WHERE c.id = ?
+    `, [id]);
+    
+    conn.release();
+    res.json(campaignRows[0]);
+  } catch (error) {
+    console.error('Error updating campaign:', error);
+    res.status(500).json({ error: 'Failed to update campaign' });
+  }
+});
+
+/**
  * PUT /api/campaigns/:id/status - Update campaign status
  * Requires: Authentication + Employee role
  * Params: id (campaign ID)
