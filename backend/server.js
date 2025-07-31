@@ -543,42 +543,18 @@ app.put('/api/campaigns/:id/status', authenticateToken, authorizeRole('employee'
   }
 });
 
-// --- DATABASE INITIALIZATION ---
+// --- DATABASE CONNECTION TEST ---
 /**
- * Database setup and table creation
- * Creates the campaigns table with proper foreign key constraints
- * Uses MySQL DDL (Data Definition Language) with AUTO_INCREMENT and ENUM types
+ * Test database connectivity on server startup
+ * Ensures the application can connect to the database before accepting requests
  */
-async function initializeDatabase() {
+async function testDatabaseConnection() {
   try {
     const conn = await pool.getConnection();
-    
-    // Create campaigns table with MySQL-specific features:
-    // - AUTO_INCREMENT for primary key
-    // - ENUM for status field validation
-    // - Foreign key constraints for data integrity
-    // - Timestamps with automatic updates
-    await conn.execute(`
-      CREATE TABLE IF NOT EXISTS campaigns (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
-        description TEXT,
-        company_id INT,
-        status ENUM('pending', 'approved', 'in_progress', 'completed', 'cancelled') DEFAULT 'pending',
-        start_date DATE,
-        end_date DATE,
-        created_by INT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        FOREIGN KEY (company_id) REFERENCES companies(id),
-        FOREIGN KEY (created_by) REFERENCES users(id)
-      )
-    `);
-    
+    console.log('✅ Connected to MariaDB database');
     conn.release();
-    console.log('Database tables initialized');
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('❌ Failed to connect to database:', error);
     throw error;
   }
 }
@@ -587,19 +563,13 @@ async function initializeDatabase() {
 /**
  * Server initialization and startup sequence
  * 1. Test database connection
- * 2. Initialize database tables
- * 3. Start Express server
+ * 2. Start Express server
  * Uses async/await for proper error handling
  */
 async function startServer() {
   try {
     // Test database connection on startup
-    const connection = await pool.getConnection();
-    console.log('✅ Connected to MariaDB database');
-    connection.release();
-    
-    // Initialize database tables with proper schema
-    await initializeDatabase();
+    await testDatabaseConnection();
     
     // Start Express server on specified port
     app.listen(PORT, () => {
