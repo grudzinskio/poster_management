@@ -2,29 +2,27 @@
 
 import { useState, useEffect } from 'react';
 import './CompanyManagement.css';
+import { useApi } from '../hooks/useApi';
 
 function CompanyManagement({ token }) {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [newCompany, setNewCompany] = useState({
     name: ''
   });
 
+  const { get, post, put, del, error, setError } = useApi(token);
+
   const fetchCompanies = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/companies', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to fetch companies.');
-      const data = await response.json();
+      const data = await get('/companies');
       setCompanies(data);
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     } finally {
       setLoading(false);
     }
@@ -46,22 +44,12 @@ function CompanyManagement({ token }) {
     setSuccess('');
     
     try {
-      const response = await fetch('http://localhost:3001/api/companies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(newCompany),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to add company.');
-      
+      const data = await post('/companies', newCompany);
       setCompanies([...companies, data]);
       setNewCompany({ name: '' });
       setSuccess('Company added successfully!');
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     }
   };
 
@@ -76,24 +64,14 @@ function CompanyManagement({ token }) {
     setSuccess('');
     
     try {
-      const response = await fetch(`http://localhost:3001/api/companies/${companyId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(updatedData),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to update company.');
-      
+      const data = await put(`/companies/${companyId}`, updatedData);
       setCompanies(companies.map(company => 
         company.id === companyId ? data : company
       ));
       setEditingId(null);
       setSuccess('Company updated successfully!');
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     }
   };
 
@@ -104,20 +82,11 @@ function CompanyManagement({ token }) {
     setSuccess('');
     
     try {
-      const response = await fetch(`http://localhost:3001/api/companies/${companyId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete company.');
-      }
-      
+      await del(`/companies/${companyId}`);
       setCompanies(companies.filter((company) => company.id !== companyId));
       setSuccess('Company deleted successfully!');
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     }
   };
 

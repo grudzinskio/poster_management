@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useApi } from '../hooks/useApi';
 
 function Login({ onLogin }) {
   const [formData, setFormData] = useState({
@@ -6,8 +7,9 @@ function Login({ onLogin }) {
     password: ''
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
   const [focusedField, setFocusedField] = useState('');
+
+  const { post, error, setError } = useApi(); // No token needed for login
 
   const handleChange = (e) => {
     setFormData({
@@ -23,24 +25,11 @@ function Login({ onLogin }) {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        onLogin(data);
-      } else {
-        setError(data.error || 'Login failed');
-      }
+      const data = await post('/login', formData);
+      onLogin(data);
     } catch (error) {
       console.error('Login error:', error);
-      setError('Network error. Please try again.');
+      // Error is already set by useApi hook
     } finally {
       setLoading(false);
     }

@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import './ClientCampaignManagement.css';
+import { useApi } from '../hooks/useApi';
 
 function ClientCampaignManagement({ token, user }) {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
@@ -16,25 +16,17 @@ function ClientCampaignManagement({ token, user }) {
     end_date: ''
   });
 
+  const { get, post, error, setError } = useApi(token);
+
   const fetchCampaigns = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/campaigns', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch campaigns');
-      }
-
-      const data = await response.json();
+      const data = await get('/campaigns');
       setCampaigns(data);
     } catch (err) {
       console.error('Error fetching campaigns:', err);
-      setError('Failed to load campaigns. Please try again.');
+      // Error is already set by useApi hook
     } finally {
       setLoading(false);
     }
@@ -57,21 +49,7 @@ function ClientCampaignManagement({ token, user }) {
     setSuccess('');
 
     try {
-      const response = await fetch('http://localhost:3001/api/campaigns', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(newCampaign),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to create campaign');
-      }
-
-      const createdCampaign = await response.json();
+      const createdCampaign = await post('/campaigns', newCampaign);
       setCampaigns([createdCampaign, ...campaigns]);
       setNewCampaign({
         name: '',
@@ -82,7 +60,7 @@ function ClientCampaignManagement({ token, user }) {
       setSuccess('Campaign created successfully!');
     } catch (err) {
       console.error('Error creating campaign:', err);
-      setError(err.message);
+      // Error is already set by useApi hook
     } finally {
       setSubmitting(false);
     }

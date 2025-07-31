@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import './UserManagement.css';
+import { useApi } from '../hooks/useApi';
 
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [newUser, setNewUser] = useState({ 
@@ -17,18 +17,16 @@ function UserManagement({ token }) {
     company_id: ''
   });
 
+  const { get, post, put, del, error, setError } = useApi(token);
+
   const fetchUsers = async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/users', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to fetch users.');
-      const data = await response.json();
+      const data = await get('/users');
       setUsers(data);
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     } finally {
       setLoading(false);
     }
@@ -36,11 +34,7 @@ function UserManagement({ token }) {
 
   const fetchCompanies = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/companies', {
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) throw new Error('Failed to fetch companies.');
-      const data = await response.json();
+      const data = await get('/companies');
       setCompanies(data);
     } catch (err) {
       console.error('Error fetching companies:', err);
@@ -67,16 +61,7 @@ function UserManagement({ token }) {
       const userData = { ...newUser };
       if (userData.company_id === '') userData.company_id = null;
       
-      const response = await fetch('http://localhost:3001/api/users', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(userData),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to add user.');
+      const data = await post('/users', userData);
       setUsers([...users, data]);
       setNewUser({ 
         username: '', 
@@ -86,7 +71,7 @@ function UserManagement({ token }) {
       });
       setSuccess('User added successfully!');
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     }
   };
 
@@ -103,22 +88,12 @@ function UserManagement({ token }) {
     try {
       if (updatedData.company_id === '') updatedData.company_id = null;
       
-      const response = await fetch(`http://localhost:3001/api/users/${userId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(updatedData),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to update user.');
-      
+      const data = await put(`/users/${userId}`, updatedData);
       setUsers(users.map(user => user.id === userId ? data : user));
       setEditingId(null);
       setSuccess('User updated successfully!');
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     }
   };
 
@@ -128,18 +103,11 @@ function UserManagement({ token }) {
     setSuccess('');
     
     try {
-      const response = await fetch(`http://localhost:3001/api/users/${userId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-      if (!response.ok) {
-         const data = await response.json();
-         throw new Error(data.error || 'Failed to delete user.');
-      }
+      await del(`/users/${userId}`);
       setUsers(users.filter((user) => user.id !== userId));
       setSuccess('User deleted successfully!');
     } catch (err) {
-      setError(err.message);
+      // Error is already set by useApi hook
     }
   };
 
