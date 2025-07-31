@@ -25,10 +25,10 @@ const pool = mysql.createPool(dbConfig);
 async function testDatabaseConnection() {
   try {
     const conn = await pool.getConnection();
-    console.log('✅ Connected to MariaDB database');
+    console.log('Connected to MariaDB database');
     conn.release();
   } catch (error) {
-    console.error('❌ Failed to connect to database:', error);
+    console.error('Failed to connect to database:', error);
     throw error;
   }
 }

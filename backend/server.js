@@ -38,11 +38,11 @@ async function startServer() {
     
     // Start Express server on specified port
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
-      console.log(`📱 API endpoints available at http://localhost:${PORT}/api`);
+      console.log(`Server is running on http://localhost:${PORT}`);
+      console.log(`API endpoints available at http://localhost:${PORT}/api`);
     });
   } catch (error) {
-    console.error('❌ Failed to start server or connect to DB:', error);
+    console.error('Failed to start server or connect to DB:', error);
     process.exit(1);  // Exit with error code
   }
 }
