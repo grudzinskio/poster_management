@@ -1,7 +1,6 @@
 // frontend/src/components/ClientCampaignManagement.jsx
 
 import React, { useState, useEffect } from 'react';
-import './ClientCampaignManagement.css';
 import { useApi } from '../hooks/useApi';
 
 function ClientCampaignManagement({ token, user }) {
@@ -83,15 +82,19 @@ function ClientCampaignManagement({ token, user }) {
   };
 
   return (
-    <div className="client-campaign-container">
-      <h3>Campaign Management - {user.company_name}</h3>
+    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">
+        Campaign Management - {user.company_name}
+      </h3>
       
       {/* Add Campaign Form */}
-      <div className="add-campaign-form">
-        <h4>Create New Campaign</h4>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="name">Campaign Name *</label>
+      <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Create New Campaign</h4>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+              Campaign Name *
+            </label>
             <input
               type="text"
               id="name"
@@ -100,11 +103,14 @@ function ClientCampaignManagement({ token, user }) {
               onChange={handleInputChange}
               required
               placeholder="Enter campaign name"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="description">Description *</label>
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              Description *
+            </label>
             <textarea
               id="description"
               name="description"
@@ -112,36 +118,43 @@ function ClientCampaignManagement({ token, user }) {
               onChange={handleInputChange}
               required
               placeholder="Describe your campaign goals, target audience, and requirements"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 resize-vertical min-h-[100px]"
             />
           </div>
           
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="start_date">Start Date</label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">
+                Start Date
+              </label>
               <input
                 type="date"
                 id="start_date"
                 name="start_date"
                 value={newCampaign.start_date}
                 onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
               />
             </div>
             
-            <div className="form-group">
-              <label htmlFor="end_date">End Date</label>
+            <div>
+              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">
+                End Date
+              </label>
               <input
                 type="date"
                 id="end_date"
                 name="end_date"
                 value={newCampaign.end_date}
                 onChange={handleInputChange}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
               />
             </div>
           </div>
           
           <button 
             type="submit" 
-            className="submit-button"
+            className={`inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={submitting}
           >
             {submitting ? 'Creating...' : 'Create Campaign'}
@@ -149,34 +162,37 @@ function ClientCampaignManagement({ token, user }) {
         </form>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
-      {success && <div className="success-message">{success}</div>}
+      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
+      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
 
       {/* Campaigns List */}
-      <div className="campaigns-section">
-        <h4>Your Campaigns</h4>
+      <div>
+        <h4 className="text-lg font-semibold text-gray-900 mb-4">Your Campaigns</h4>
         
         {loading ? (
-          <div className="loading">Loading campaigns...</div>
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+            <span className="ml-2 text-gray-600">Loading campaigns...</span>
+          </div>
         ) : campaigns.length === 0 ? (
-          <div className="no-campaigns">
+          <div className="text-center py-8 text-gray-500">
             No campaigns found. Create your first campaign above!
           </div>
         ) : (
-          <div className="campaigns-grid">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {campaigns.map((campaign) => (
-              <div key={campaign.id} className="campaign-card">
-                <h5>{campaign.name}</h5>
-                <div className={`campaign-status status-${campaign.status}`}>
+              <div key={campaign.id} className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-shadow duration-200">
+                <h5 className="text-lg font-semibold text-gray-900 mb-2">{campaign.name}</h5>
+                <div className={`status-badge status-${campaign.status} mb-4`}>
                   {getStatusDisplay(campaign.status)}
                 </div>
-                <div className="campaign-description">
+                <div className="text-gray-600 mb-4 line-clamp-3">
                   {campaign.description}
                 </div>
-                <div className="campaign-dates">
-                  <div><strong>Start:</strong> {formatDate(campaign.start_date)}</div>
-                  <div><strong>End:</strong> {formatDate(campaign.end_date)}</div>
-                  <div><strong>Created:</strong> {formatDate(campaign.created_at)}</div>
+                <div className="space-y-1 text-sm text-gray-500">
+                  <div><span className="font-medium text-gray-700">Start:</span> {formatDate(campaign.start_date)}</div>
+                  <div><span className="font-medium text-gray-700">End:</span> {formatDate(campaign.end_date)}</div>
+                  <div><span className="font-medium text-gray-700">Created:</span> {formatDate(campaign.created_at)}</div>
                 </div>
               </div>
             ))}
@@ -188,3 +204,4 @@ function ClientCampaignManagement({ token, user }) {
 }
 
 export default ClientCampaignManagement;
+

@@ -196,7 +196,7 @@ function EmployeeCampaignManagement({ token, user }) {
               name="name"
               value={editData.name}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 text-sm"
+              className="form-input text-sm"
             />
           </td>
           <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{campaign.company_name}</td>
@@ -206,7 +206,7 @@ function EmployeeCampaignManagement({ token, user }) {
               value={editData.description}
               onChange={handleEditChange}
               rows="2"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 resize-vertical text-sm"
+              className="form-textarea text-sm"
             />
           </td>
           <td className="px-6 py-4 border-b border-gray-200">
@@ -215,7 +215,7 @@ function EmployeeCampaignManagement({ token, user }) {
               name="start_date"
               value={editData.start_date}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 text-sm"
+              className="form-input text-sm"
             />
           </td>
           <td className="px-6 py-4 border-b border-gray-200">
@@ -224,7 +224,7 @@ function EmployeeCampaignManagement({ token, user }) {
               name="end_date"
               value={editData.end_date}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 text-sm"
+              className="form-input text-sm"
             />
           </td>
           <td className="px-6 py-4 border-b border-gray-200">
@@ -232,7 +232,7 @@ function EmployeeCampaignManagement({ token, user }) {
               name="status"
               value={editData.status}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer text-sm"
+              className="form-select text-sm"
             >
               <option value="pending">Pending Review</option>
               <option value="approved">Approved</option>
@@ -242,16 +242,16 @@ function EmployeeCampaignManagement({ token, user }) {
             </select>
           </td>
           <td className="px-6 py-4 border-b border-gray-200">
-            <div className="flex flex-wrap gap-2">
+            <div className="action-buttons">
               <button
                 onClick={() => handleSaveEdit(campaign.id, editData)}
-                className="bg-green-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500"
+                className="btn-success btn-xs"
               >
                 Save
               </button>
               <button
                 onClick={() => setEditingId(null)}
-                className="bg-gray-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+                className="btn-secondary btn-xs"
               >
                 Cancel
               </button>
@@ -284,10 +284,10 @@ function EmployeeCampaignManagement({ token, user }) {
                   </label>
                 ))}
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="action-buttons">
                 <button
                   onClick={() => handleSaveAssignment(campaign.id)}
-                  className="bg-green-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500"
+                  className="btn-success btn-sm"
                   disabled={selectedContractors.length === 0}
                 >
                   Assign Selected ({selectedContractors.length})
@@ -297,7 +297,7 @@ function EmployeeCampaignManagement({ token, user }) {
                     setAssigningId(null);
                     setSelectedContractors([]);
                   }}
-                  className="bg-gray-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+                  className="btn-secondary btn-sm"
                 >
                   Cancel
                 </button>
@@ -326,16 +326,16 @@ function EmployeeCampaignManagement({ token, user }) {
           </span>
         </td>
         <td className="px-6 py-4 border-b border-gray-200">
-          <div className="flex flex-wrap gap-2">
+          <div className="action-buttons">
             <button
               onClick={() => handleEditCampaign(campaign)}
-              className="bg-blue-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 focus:ring-blue-500"
+              className="btn-primary btn-xs"
             >
               Edit
             </button>
             <button
               onClick={() => handleAssignContractors(campaign.id)}
-              className="bg-cyan-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-700 focus:ring-cyan-500"
+              className="btn-info btn-xs"
             >
               Assign
             </button>
@@ -346,16 +346,16 @@ function EmployeeCampaignManagement({ token, user }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8">
-      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">Employee Campaign Management</h3>
+    <div className="page-container">
+      <h3 className="page-title">Employee Campaign Management</h3>
       
       {/* Add Campaign Form */}
-      <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Create New Campaign</h4>
+      <div className="section-container">
+        <h4 className="section-title">Create New Campaign</h4>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-row">
-            <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Campaign Name *</label>
+            <div className="form-group">
+              <label htmlFor="name" className="form-label">Campaign Name *</label>
               <input
                 type="text"
                 id="name"
@@ -364,19 +364,19 @@ function EmployeeCampaignManagement({ token, user }) {
                 onChange={handleInputChange}
                 required
                 placeholder="Enter campaign name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                className="form-input"
               />
             </div>
             
-            <div className="mb-4">
-              <label htmlFor="company_id" className="block text-sm font-medium text-gray-700 mb-2">Company *</label>
+            <div className="form-group">
+              <label htmlFor="company_id" className="form-label">Company *</label>
               <select
                 id="company_id"
                 name="company_id"
                 value={newCampaign.company_id}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer"
+                className="form-select"
               >
                 <option value="">Select Company</option>
                 {companies.map(company => (
@@ -388,8 +388,8 @@ function EmployeeCampaignManagement({ token, user }) {
             </div>
           </div>
           
-          <div className="mb-4">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+          <div className="form-group">
+            <label htmlFor="description" className="form-label">Description *</label>
             <textarea
               id="description"
               name="description"
@@ -398,32 +398,32 @@ function EmployeeCampaignManagement({ token, user }) {
               required
               placeholder="Describe the campaign goals, target audience, and requirements"
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 resize-vertical"
+              className="form-textarea"
             />
           </div>
           
           <div className="form-row">
-            <div className="mb-4">
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+            <div className="form-group">
+              <label htmlFor="start_date" className="form-label">Start Date</label>
               <input
                 type="date"
                 id="start_date"
                 name="start_date"
                 value={newCampaign.start_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                className="form-input"
               />
             </div>
             
-            <div className="mb-4">
-              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+            <div className="form-group">
+              <label htmlFor="end_date" className="form-label">End Date</label>
               <input
                 type="date"
                 id="end_date"
                 name="end_date"
                 value={newCampaign.end_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                className="form-input"
               />
             </div>
           </div>
@@ -438,17 +438,17 @@ function EmployeeCampaignManagement({ token, user }) {
         </form>
       </div>
 
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
+      {error && <div className="alert-error">{error}</div>}
+      {success && <div className="alert-success">{success}</div>}
 
       {/* Campaigns List */}
       <div>
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">All Campaigns</h4>
+        <h4 className="section-title">All Campaigns</h4>
         
         {loading ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-            <span className="ml-2 text-gray-600">Loading campaigns...</span>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <span className="loading-text">Loading campaigns...</span>
           </div>
         ) : campaigns.length === 0 ? (
           <div className="no-campaigns">
@@ -456,7 +456,7 @@ function EmployeeCampaignManagement({ token, user }) {
             <div className="empty-state-description">Create the first campaign above!</div>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
+          <div className="table-container">
             <table className="table">
               <thead>
                 <tr>
@@ -484,4 +484,3 @@ function EmployeeCampaignManagement({ token, user }) {
 }
 
 export default EmployeeCampaignManagement;
-

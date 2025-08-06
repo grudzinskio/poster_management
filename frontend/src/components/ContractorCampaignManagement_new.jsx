@@ -100,7 +100,7 @@ function ContractorCampaignManagement({ token, user }) {
           <div className="mt-4">
             <button
               onClick={() => handleStatusUpdate(campaign.id, 'in_progress')}
-              className="bg-blue-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 focus:ring-blue-500"
+              className="btn-primary btn-sm"
             >
               Start Working
             </button>
@@ -127,8 +127,8 @@ function ContractorCampaignManagement({ token, user }) {
   );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8">
-      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">
+    <div className="page-container">
+      <h3 className="page-title">
         Contractor Dashboard - {user.company_name || 'Independent'}
       </h3>
 
@@ -148,18 +148,18 @@ function ContractorCampaignManagement({ token, user }) {
         </button>
       </div>
 
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
+      {error && <div className="alert-error">{error}</div>}
+      {success && <div className="alert-success">{success}</div>}
 
       {/* Current Campaigns Tab */}
       {activeTab === 'current' && (
         <div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Active Campaigns</h4>
+          <h4 className="section-title">Active Campaigns</h4>
           
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-              <span className="ml-2 text-gray-600">Loading campaigns...</span>
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <span className="loading-text">Loading campaigns...</span>
             </div>
           ) : campaigns.length === 0 ? (
             <div className="no-campaigns">
@@ -181,7 +181,7 @@ function ContractorCampaignManagement({ token, user }) {
       {/* Completed Campaigns Tab */}
       {activeTab === 'completed' && (
         <div>
-          <h4 className="text-lg font-semibold text-gray-900 mb-4">Completed Campaigns</h4>
+          <h4 className="section-title">Completed Campaigns</h4>
           
           {completedCampaigns.length === 0 ? (
             <div className="no-campaigns">
@@ -204,4 +204,3 @@ function ContractorCampaignManagement({ token, user }) {
 }
 
 export default ContractorCampaignManagement;
-

@@ -75,16 +75,16 @@ function App() {
 
   // Main Application UI - Role-Based Interface
   return (
-    <div className="app-container">
+    <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Application Header - Common for all authenticated users */}
-      <header className="app-header">
-        <h1>Poster Campaigns</h1>
-        <div className="user-info">
-          <span>
+      <header className="flex justify-between items-center py-4 border-b border-gray-200 mb-8">
+        <h1 className="text-3xl font-bold text-gray-900">Poster Campaigns</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-gray-600">
             Welcome, {user.username} ({user.role})
             {user.company_name && ` - ${user.company_name}`}
           </span>
-          <button onClick={handleLogout} className="logout-button">
+          <button onClick={handleLogout} className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500">
             Logout
           </button>
         </div>
@@ -94,21 +94,33 @@ function App() {
         {/* Employee-Only Navigation Tabs */}
         {/* Role-Based Access Control: Only employees can manage users and companies */}
         {user.role === 'employee' && (
-          <div className="employee-tabs">
+          <div className="flex gap-4 mb-8 border-b border-gray-200">
             <button 
-              className={`tab-button ${activeTab === 'campaigns' ? 'active' : ''}`}
+              className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === 'campaigns' 
+                  ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+              }`}
               onClick={() => setActiveTab('campaigns')}
             >
               Campaigns
             </button>
             <button 
-              className={`tab-button ${activeTab === 'users' ? 'active' : ''}`}
+              className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === 'users' 
+                  ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+              }`}
               onClick={() => setActiveTab('users')}
             >
               User Management
             </button>
             <button 
-              className={`tab-button ${activeTab === 'companies' ? 'active' : ''}`}
+              className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                activeTab === 'companies' 
+                  ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+              }`}
               onClick={() => setActiveTab('companies')}
             >
               Company Management

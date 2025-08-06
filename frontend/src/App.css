@@ -1,212 +1,26 @@
-/* frontend/src/App.css */
+@import "tailwindcss";
 
-#root {
-  width: 100%;
-  height: 100%;
+/* Status Badge System - Only keep status badges as they don't have circular dependencies */
+.status-badge {
+  @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+.status-pending {
+  @apply bg-yellow-100 text-yellow-800 border border-yellow-200;
 }
 
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+.status-approved {
+  @apply bg-green-100 text-green-800 border border-green-200;
 }
 
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+.status-in_progress {
+  @apply bg-blue-100 text-blue-800 border border-blue-200;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+.status-completed {
+  @apply bg-cyan-100 text-cyan-800 border border-cyan-200;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
-}
-
-/* New styles for authentication */
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  font-size: 1.2rem;
-}
-
-.app-container {
-  min-height: 100vh;
-  /* --- ADDED STYLES --- */
-  max-width: 1280px;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 2rem;
-  padding-right: 2rem;
-}
-
-.app-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid #ddd;
-  margin-bottom: 2rem;
-}
-
-.app-header h1 {
-  margin: 0;
-  font-size: 2rem;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.user-info span {
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.logout-button {
-  padding: 0.5rem 1rem;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  transition: background-color 0.3s ease;
-}
-
-.logout-button:hover {
-  background-color: #c82333;
-}
-
-.campaigns-list {
-  text-align: left;
-  max-width: 800px;
-  margin: 0 auto;
-}
-
-.campaigns-list h2 {
-  margin-bottom: 1rem;
-  color: #333;
-}
-
-.campaigns-list ul {
-  list-style: none;
-  padding: 0;
-}
-
-.campaigns-list li {
-  background: #f8f9fa;
-  padding: 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: 4px;
-  border-left: 4px solid #646cff;
-}
-
-.error {
-  color: #dc3545;
-  background-color: #f8d7da;
-  padding: 1rem;
-  border-radius: 4px;
-  margin: 1rem 0;
-  border: 1px solid #f5c6cb;
-}
-
-/* Employee Tabs */
-.employee-tabs {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 2rem;
-  border-bottom: 1px solid #ddd;
-}
-
-.tab-button {
-  padding: 0.75rem 1.5rem;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #666;
-  transition: all 0.3s ease;
-}
-
-.tab-button:hover {
-  color: #646cff;
-  background-color: #f8f9fa;
-}
-
-.tab-button.active {
-  color: #646cff;
-  border-bottom-color: #646cff;
-  background-color: #f8f9fa;
-}
-
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .app-header {
-    border-bottom-color: #444;
-  }
-
-  .user-info span {
-    color: #ccc;
-  }
-
-  .campaigns-list h2 {
-    color: #fff;
-  }
-
-  .campaigns-list li {
-    background: #333;
-    color: #fff;
-  }
-
-  .error {
-    background-color: #2d1b1f;
-    color: #f8d7da;
-    border-color: #842029;
-  }
-
-  .employee-tabs {
-    border-bottom-color: #444;
-  }
-
-  .tab-button {
-    color: #ccc;
-  }
-
-  .tab-button:hover {
-    color: #646cff;
-    background-color: #333;
-  }
-
-  .tab-button.active {
-    color: #646cff;
-    background-color: #333;
-  }
+.status-cancelled {
+  @apply bg-red-100 text-red-800 border border-red-200;
 }
