@@ -1,7 +1,7 @@
 /* index.css */
 
 /* 1. Import Tailwind's base  utilitie layer. */
-@tailwind utilities;
+@import "tailwindcss";
 
 /* 2. Define custom component classes within the appropriate layer. */
 @layer components {
@@ -94,13 +94,13 @@
 
   /* Alert enhancements */
   .alert-success {
-    @apply px-6 py-4 mb-6 text-emerald-800 bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-emerald-500 rounded-xl shadow-lg animate-slide-in-up;
+    @apply px-6 py-4 mb-6 text-emerald-800 bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-emerald-500 rounded-xl shadow-lg animate-[slide-in-up];
   }
   .alert-error {
-    @apply px-6 py-4 mb-6 text-red-800 bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 rounded-xl shadow-lg animate-slide-in-up;
+    @apply px-6 py-4 mb-6 text-red-800 bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 rounded-xl shadow-lg animate-[slide-in-up];
   }
   .alert-info {
-    @apply px-6 py-4 mb-6 text-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-xl shadow-lg animate-slide-in-up;
+    @apply px-6 py-4 mb-6 text-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-xl shadow-lg animate-[slide-in-up];
   }
 }
 
