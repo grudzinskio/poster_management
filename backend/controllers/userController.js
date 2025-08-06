@@ -5,18 +5,28 @@ const { pool } = require('../config/database');
 const { hashPassword } = require('../services/authService');
 
 /**
- * GET /api/users - Retrieve all users with company information
- * Returns: Users with joined company data using LEFT JOIN
+ * GET /api/users - Retrieve users with optional role filtering
  */
 async function getAllUsers(req, res) {
   try {
     const conn = await pool.getConnection();
-    const [rows] = await conn.execute(`
+    const { role } = req.query;
+    
+    let query = `
       SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
       FROM users u
       LEFT JOIN companies c ON u.company_id = c.id
-      ORDER BY u.username
-    `);
+    `;
+    let params = [];
+    
+    if (role) {
+      query += ' WHERE u.role = ?';
+      params = [role];
+    }
+    
+    query += ' ORDER BY u.id DESC';
+    
+    const [rows] = await conn.execute(query, params);
     conn.release();
     res.json(rows);
   } catch (error) {
@@ -190,13 +200,6 @@ async function deleteUser(req, res) {
     if (error.code === 'ER_ROW_IS_REFERENCED_2') {
       return res.status(400).json({ 
         error: 'Cannot delete user because they have associated data. Please contact an administrator.' 
-      });
-    }
-    
-    // Handle other specific MySQL errors
-    if (error.code) {
-      return res.status(500).json({ 
-        error: `Database error: ${error.code} - ${error.sqlMessage}` 
       });
     }
     

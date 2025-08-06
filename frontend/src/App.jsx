@@ -22,6 +22,7 @@ import UserManagement from './components/UserManagement';
 import CompanyManagement from './components/CompanyManagement';
 import ClientCampaignManagement from './components/ClientCampaignManagement';
 import EmployeeCampaignManagement from './components/EmployeeCampaignManagement';
+import ContractorCampaignManagement from './components/ContractorCampaignManagement';
 import './App.css';
 
 function App() {
@@ -122,8 +123,10 @@ function App() {
         {user.role === 'employee' && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
         
         {/* Client Interface */}
-        {/* Clients see only their own campaigns and cannot manage users/companies */}
         {user.role === 'client' && <ClientCampaignManagement token={token} user={user} />}
+        
+        {/* Contractor Interface */}
+        {user.role === 'contractor' && <ContractorCampaignManagement token={token} user={user} />}
       </main>
     </div>
   );

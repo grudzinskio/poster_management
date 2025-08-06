@@ -178,9 +178,10 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-.edit-btn, .save-btn, .cancel-btn {
+.edit-btn, .save-btn, .cancel-btn, .assign-btn {
   padding: 0.5rem 1rem;
   border: none;
   border-radius: 4px;
@@ -197,6 +198,15 @@
 
 .edit-btn:hover {
   background-color: #0056b3;
+}
+
+.assign-btn {
+  background-color: #17a2b8;
+  color: white;
+}
+
+.assign-btn:hover {
+  background-color: #138496;
 }
 
 .save-btn {
@@ -217,45 +227,62 @@
   background-color: #545b62;
 }
 
-.status-select {
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  cursor: pointer;
-  min-width: 120px;
+/* Contractor Assignment */
+.assigning-row {
+  background-color: #e3f2fd !important;
 }
 
-/* Edit mode styles */
-.editing-row {
-  background-color: #fff3cd !important;
-}
-
-.edit-input,
-.edit-textarea,
-.edit-select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  font-size: 0.8rem;
-  font-family: inherit;
-  box-sizing: border-box;
-}
-
-.edit-textarea {
-  resize: vertical;
-  min-height: 50px;
-}
-
-.no-campaigns {
-  text-align: center;
-  color: #666;
-  font-style: italic;
-  padding: 2rem;
+.contractor-assignment {
+  padding: 1rem;
   background-color: #f8f9fa;
   border-radius: 8px;
-  border: 1px dashed #ccc;
+  margin: 0.5rem 0;
+}
+
+.contractor-assignment h5 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.contractor-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 1rem;
+  background-color: white;
+}
+
+.contractor-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem;
+}
+
+.contractor-checkbox input[type="checkbox"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.contractor-checkbox label {
+  cursor: pointer;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.assignment-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.assignment-actions .save-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
 }
 
 .error-message {
@@ -306,10 +333,15 @@
   .edit-btn,
   .save-btn,
   .cancel-btn,
+  .assign-btn,
   .status-select {
     font-size: 0.7rem;
     padding: 0.25rem 0.5rem;
     min-width: auto;
+  }
+  
+  .contractor-list {
+    grid-template-columns: 1fr;
   }
   
   .campaigns-table th,

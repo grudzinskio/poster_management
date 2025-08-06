@@ -1,0 +1,386 @@
+.contractor-campaign-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  background-color: #ffffff;
+  min-height: 100vh;
+}
+
+.contractor-campaign-container h3 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.tab-button {
+  padding: 12px 24px;
+  border: none;
+  background-color: transparent;
+  color: #495057;
+  font-size: 16px;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  color: #2c3e50;
+  background-color: #f8f9fa;
+}
+
+.tab-button.active {
+  color: #007bff;
+  border-bottom-color: #007bff;
+  font-weight: 600;
+}
+
+/* Campaign Sections */
+.campaigns-section h4,
+.completed-section h4 {
+  color: #2c3e50;
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+/* Campaign Grid */
+.campaigns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.campaign-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: box-shadow 0.3s ease;
+}
+
+.campaign-card:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.campaign-card h5 {
+  margin: 0 0 15px 0;
+  color: #2c3e50;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Campaign Status */
+.campaign-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 15px;
+}
+
+.status-approved {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-in_progress {
+  background-color: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.status-completed {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+/* Campaign Details */
+.campaign-company {
+  margin-bottom: 10px;
+  color: #495057;
+}
+
+.campaign-company strong {
+  color: #2c3e50;
+}
+
+.campaign-description {
+  color: #495057;
+  line-height: 1.5;
+  margin-bottom: 15px;
+}
+
+.campaign-dates {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: #495057;
+}
+
+.campaign-dates strong {
+  color: #2c3e50;
+}
+
+/* Campaign Actions */
+.campaign-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-update-btn,
+.upload-images-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.status-update-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.status-update-btn:hover {
+  background-color: #0056b3;
+}
+
+.upload-images-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.upload-images-btn:hover {
+  background-color: #1e7e34;
+}
+
+/* Completed Campaigns */
+.completed-campaigns-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.completed-campaign-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.completed-campaign-card h5 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.image-stats {
+  display: flex;
+  gap: 20px;
+  margin: 15px 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  min-width: 70px;
+  border: 1px solid #e9ecef;
+}
+
+.stat.approved {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.stat.approved .stat-number {
+  color: #155724;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #495057;
+  text-align: center;
+}
+
+.completion-date {
+  font-size: 14px;
+  color: #495057;
+  margin-top: 10px;
+}
+
+/* Messages */
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #f5c6cb;
+}
+
+.success-message {
+  background-color: #d4edda;
+  color: #155724;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #c3e6cb;
+}
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #495057;
+  font-size: 16px;
+}
+
+.no-campaigns {
+  text-align: center;
+  padding: 40px;
+  color: #495057;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  font-size: 16px;
+  border: 1px solid #e9ecef;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .contractor-campaign-container {
+    padding: 15px;
+  }
+  
+  .campaigns-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .completed-campaigns-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .tab-navigation {
+    flex-direction: column;
+  }
+  
+  .tab-button {
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+    border-left: 3px solid transparent;
+  }
+  
+  .tab-button.active {
+    border-bottom-color: #e9ecef;
+    border-left-color: #007bff;
+  }
+  
+  .campaign-dates {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .image-stats {
+    justify-content: space-around;
+  }
+}
+
+@media (max-width: 480px) {
+  .campaign-actions {
+    flex-direction: column;
+  }
+  
+  .status-update-btn,
+  .upload-images-btn {
+    width: 100%;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .contractor-campaign-container {
+    background-color: #1a1a1a;
+    color: #fff;
+  }
+  
+  .contractor-campaign-container h3,
+  .campaigns-section h4,
+  .completed-section h4 {
+    color: #fff;
+  }
+  
+  .campaign-card,
+  .completed-campaign-card {
+    background-color: #2a2a2a;
+    border-color: #444;
+  }
+  
+  .campaign-card h5,
+  .completed-campaign-card h5 {
+    color: #fff;
+  }
+  
+  .campaign-company,
+  .campaign-description,
+  .campaign-dates,
+  .completion-date,
+  .stat-label {
+    color: #ccc;
+  }
+  
+  .campaign-company strong,
+  .campaign-dates strong {
+    color: #fff;
+  }
+  
+  .stat {
+    background-color: #3a3a3a;
+    border-color: #555;
+  }
+  
+  .stat-number {
+    color: #fff;
+  }
+  
+  .no-campaigns {
+    background-color: #2a2a2a;
+    border-color: #555;
+    color: #ccc;
+  }
+  
+  .tab-button {
+    color: #ccc;
+  }
+  
+  .tab-button:hover {
+    color: #fff;
+    background-color: #333;
+  }
+}

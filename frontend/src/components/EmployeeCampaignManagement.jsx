@@ -7,10 +7,13 @@ import { useApi } from '../hooks/useApi';
 function EmployeeCampaignManagement({ token, user }) {
   const [campaigns, setCampaigns] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [contractors, setContractors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [assigningId, setAssigningId] = useState(null);
+  const [selectedContractors, setSelectedContractors] = useState([]);
   const [newCampaign, setNewCampaign] = useState({
     name: '',
     description: '',
@@ -44,9 +47,19 @@ function EmployeeCampaignManagement({ token, user }) {
     }
   };
 
+  const fetchContractors = async () => {
+    try {
+      const data = await get('/users?role=contractor');
+      setContractors(data);
+    } catch (err) {
+      console.error('Error fetching contractors:', err);
+    }
+  };
+
   useEffect(() => {
     fetchCampaigns();
     fetchCompanies();
+    fetchContractors();
   }, [token]);
 
   const handleInputChange = (e) => {
@@ -125,6 +138,31 @@ function EmployeeCampaignManagement({ token, user }) {
     }
   };
 
+  const handleAssignContractors = async (campaignId, contractorIds) => {
+    setError('');
+    setSuccess('');
+    
+    try {
+      await post(`/campaigns/${campaignId}/assign`, { 
+        contractor_ids: contractorIds 
+      });
+      
+      setSuccess('Contractors assigned successfully!');
+      setAssigningId(null);
+      setSelectedContractors([]);
+    } catch (err) {
+      console.error('Error assigning contractors:', err);
+    }
+  };
+
+  const handleContractorSelection = (contractorId, isSelected) => {
+    if (isSelected) {
+      setSelectedContractors([...selectedContractors, contractorId]);
+    } else {
+      setSelectedContractors(selectedContractors.filter(id => id !== contractorId));
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString();
@@ -153,6 +191,51 @@ function EmployeeCampaignManagement({ token, user }) {
     const handleEditChange = (e) => {
       setEditData({ ...editData, [e.target.name]: e.target.value });
     };
+
+    if (assigningId === campaign.id) {
+      return (
+        <tr key={campaign.id} className="assigning-row">
+          <td colSpan="8">
+            <div className="contractor-assignment">
+              <h5>Assign Contractors to: {campaign.name}</h5>
+              <div className="contractor-list">
+                {contractors.map(contractor => (
+                  <div key={contractor.id} className="contractor-checkbox">
+                    <input
+                      type="checkbox"
+                      id={`contractor-${contractor.id}`}
+                      checked={selectedContractors.includes(contractor.id)}
+                      onChange={(e) => handleContractorSelection(contractor.id, e.target.checked)}
+                    />
+                    <label htmlFor={`contractor-${contractor.id}`}>
+                      {contractor.username} {contractor.company_name && `(${contractor.company_name})`}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div className="assignment-actions">
+                <button
+                  className="save-btn"
+                  onClick={() => handleAssignContractors(campaign.id, selectedContractors)}
+                  disabled={selectedContractors.length === 0}
+                >
+                  Assign Selected
+                </button>
+                <button
+                  className="cancel-btn"
+                  onClick={() => {
+                    setAssigningId(null);
+                    setSelectedContractors([]);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
 
     if (editingId === campaign.id) {
       return (
@@ -236,8 +319,8 @@ function EmployeeCampaignManagement({ token, user }) {
     return (
       <tr key={campaign.id}>
         <td>{campaign.id}</td>
-        <td><strong>{campaign.name}</strong></td>
-        <td>{campaign.company_name || 'Unknown Company'}</td>
+        <td>{campaign.name}</td>
+        <td>{campaign.company_name}</td>
         <td className="description-cell">{campaign.description}</td>
         <td>{formatDate(campaign.start_date)}</td>
         <td>{formatDate(campaign.end_date)}</td>
@@ -253,6 +336,17 @@ function EmployeeCampaignManagement({ token, user }) {
               onClick={() => handleEditCampaign(campaign)}
             >
               Edit
+            </button>
+            <button
+              className="assign-btn"
+              onClick={() => {
+                setAssigningId(campaign.id);
+                setSelectedContractors([]);
+                setError('');
+                setSuccess('');
+              }}
+            >
+              Assign
             </button>
             <select
               value={campaign.status}
