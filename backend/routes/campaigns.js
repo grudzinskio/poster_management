@@ -11,13 +11,19 @@ const {
   updateCampaign, 
   updateCampaignStatus,
   assignContractors,
-  updateCampaignStatusByContractor
+  updateCampaignStatusByContractor,
+  getContractorCampaigns
 } = require('../controllers/campaignController');
 
 /**
  * GET /api/campaigns - Retrieve campaigns based on user role
  */
 router.get('/', authenticateToken, getAllCampaigns);
+
+/**
+ * GET /api/campaigns/contractor - Get campaigns assigned to contractor
+ */
+router.get('/contractor', authenticateToken, authorizeRole('contractor'), getContractorCampaigns);
 
 /**
  * GET /api/campaigns/completed - Get completed campaigns for contractors

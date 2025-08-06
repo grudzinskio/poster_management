@@ -1,19 +1,123 @@
-@import "tailwindcss";
+/* index.css */
 
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* 1. Import Tailwind's base  utilitie layer. */
+@tailwind utilities;
+
+/* 2. Define custom component classes within the appropriate layer. */
+@layer components {
+  /* Glass morphism effect */
+  .glass {
+    @apply backdrop-blur-sm bg-white/80 border border-white/20 shadow-xl;
+  }
+  .glass-dark {
+    @apply backdrop-blur-sm bg-gray-900/80 border border-gray-700/20 shadow-xl;
+  }
+
+  /* Enhanced card hover effects */
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+  }
+
+  /* Form enhancements */
+  .form-label {
+    @apply block mb-2 text-sm font-semibold text-gray-700;
+  }
+  .form-input {
+    @apply w-full px-4 py-3 text-gray-900 placeholder-gray-500 bg-white border border-gray-200 rounded-xl 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+           transition-all duration-200 hover:border-gray-300;
+  }
+  .form-textarea {
+    @apply w-full min-h-[120px] px-4 py-3 text-gray-900 placeholder-gray-500 bg-white border border-gray-200 rounded-xl 
+           resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent 
+           transition-all duration-200 hover:border-gray-300;
+  }
+
+  /* Button enhancements */
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl 
+           shadow-lg transition-all duration-200 transform hover:scale-105 hover:from-blue-700 hover:to-indigo-700 
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 active:scale-95 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-success {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-emerald-600 to-green-600 rounded-xl 
+           shadow-lg transition-all duration-200 transform hover:scale-105 hover:from-emerald-700 hover:to-green-700 
+           focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 active:scale-95 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-white bg-gradient-to-r from-red-600 to-rose-600 rounded-xl 
+           shadow-lg transition-all duration-200 transform hover:scale-105 hover:from-red-700 hover:to-rose-700 
+           focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 active:scale-95 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 font-semibold text-gray-700 bg-white border-2 border-gray-200 rounded-xl 
+           shadow-md transition-all duration-200 transform hover:scale-105 hover:bg-gray-50 hover:border-gray-300 
+           focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 active:scale-95 
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Enhanced status badges */
+  .status-badge {
+    @apply inline-flex items-center px-3 py-1.5 text-xs font-bold tracking-wider uppercase rounded-full shadow-sm;
+  }
+  .status-pending {
+    @apply bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200 shadow-yellow-200/50;
+  }
+  .status-approved {
+    @apply bg-gradient-to-r from-emerald-100 to-green-100 text-emerald-800 border border-emerald-200 shadow-emerald-200/50;
+  }
+  .status-in_progress {
+    @apply bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 border border-blue-200 shadow-blue-200/50;
+  }
+  .status-completed {
+    @apply bg-gradient-to-r from-teal-100 to-cyan-100 text-teal-800 border border-teal-200 shadow-teal-200/50;
+  }
+  .status-cancelled {
+    @apply bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200 shadow-red-200/50;
+  }
+
+  /* Table enhancements */
+  .table-header {
+    @apply px-6 py-4 text-xs font-bold tracking-wider text-left text-gray-600 uppercase bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200;
+  }
+  .table-cell {
+    @apply px-6 py-4 text-sm text-gray-900 border-b border-gray-100;
+  }
+  
+  /* Loading spinner */
+  .spinner {
+    @apply w-5 h-5 border-2 border-gray-300 rounded-full animate-spin border-t-blue-600;
+  }
+
+  /* Alert enhancements */
+  .alert-success {
+    @apply px-6 py-4 mb-6 text-emerald-800 bg-gradient-to-r from-emerald-50 to-green-50 border-l-4 border-emerald-500 rounded-xl shadow-lg animate-slide-in-up;
+  }
+  .alert-error {
+    @apply px-6 py-4 mb-6 text-red-800 bg-gradient-to-r from-red-50 to-rose-50 border-l-4 border-red-500 rounded-xl shadow-lg animate-slide-in-up;
+  }
+  .alert-info {
+    @apply px-6 py-4 mb-6 text-blue-800 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-xl shadow-lg animate-slide-in-up;
+  }
 }
 
-* {
-  box-sizing: border-box;
+/* 3. Add any truly custom CSS or styles for pseudo-elements. */
+@layer base {
+  body {
+    @apply m-0 min-w-80 min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100;
+  }
 }
 
-body {
-  @apply m-0 min-w-80 min-h-screen bg-gray-50;
+/* Custom scrollbar (targets pseudo-elements, so it stays as custom CSS) */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 rounded-full;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full hover:bg-gray-500;
 }

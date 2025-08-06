@@ -333,6 +333,35 @@ async function updateCampaignStatusByContractor(req, res) {
   }
 }
 
+// Get campaigns assigned to the current contractor
+const getContractorCampaigns = async (req, res) => {
+  try {
+    // Ensure user is a contractor
+    if (req.user.role !== 'contractor') {
+      return res.status(403).json({ error: 'Access denied. Contractor role required.' });
+    }
+
+    const conn = await pool.getConnection();
+    
+    // Get campaigns where this contractor is assigned
+    const [campaigns] = await conn.execute(
+      `SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name 
+       FROM campaigns c 
+       LEFT JOIN companies co ON c.company_id = co.id 
+       JOIN campaign_assignments ca ON c.id = ca.campaign_id
+       WHERE ca.contractor_id = ?
+       ORDER BY c.created_at DESC`,
+      [req.user.id]
+    );
+
+    conn.release();
+    res.json(campaigns);
+  } catch (error) {
+    console.error('Error fetching contractor campaigns:', error);
+    res.status(500).json({ error: 'Failed to fetch campaigns' });
+  }
+};
+
 module.exports = {
   getAllCampaigns,
   getCompletedCampaigns,
@@ -340,5 +369,6 @@ module.exports = {
   updateCampaign,
   updateCampaignStatus,
   assignContractors,
-  updateCampaignStatusByContractor
+  updateCampaignStatusByContractor,
+  getContractorCampaigns,
 };
