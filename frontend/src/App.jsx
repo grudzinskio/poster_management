@@ -75,7 +75,7 @@ function App() {
 
   // Main Application UI - Role-Based Interface
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="app-background min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Application Header - Common for all authenticated users */}
       <header className="flex justify-between items-center py-4 border-b border-gray-200 mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Poster Campaigns</h1>

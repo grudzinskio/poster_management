@@ -107,7 +107,30 @@
 /* 3. Add any truly custom CSS or styles for pseudo-elements. */
 @layer base {
   body {
-    @apply m-0 min-w-80 min-h-screen bg-gray-50;
+    @apply m-0 min-w-80 min-h-screen;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+    background-attachment: fixed;
+  }
+  
+  /* More visible pattern overlay for logged-in areas */
+  .app-background {
+    position: relative;
+  }
+  
+  .app-background::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 25% 25%, rgba(100, 116, 139, 0.08) 2px, transparent 2px),
+      radial-gradient(circle at 75% 75%, rgba(71, 85, 105, 0.06) 1px, transparent 1px),
+      linear-gradient(45deg, rgba(148, 163, 184, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px, 40px 40px, 20px 20px;
+    pointer-events: none;
+    z-index: -1;
   }
 }
 
