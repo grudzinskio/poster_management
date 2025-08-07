@@ -202,50 +202,50 @@ function EmployeeCampaignManagement({ token, user }) {
     if (editingId === campaign.id) {
       return (
         <tr className="editing-row">
-          <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{campaign.id}</td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">{campaign.id}</td>
+          <td className="table-cell">
             <input
               type="text"
               name="name"
               value={editData.name}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 text-sm"
+              className="form-input text-sm"
             />
           </td>
-          <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{campaign.company_name}</td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">{campaign.company_name}</td>
+          <td className="table-cell">
             <textarea
               name="description"
               value={editData.description}
               onChange={handleEditChange}
               rows="2"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 resize-vertical text-sm"
+              className="form-textarea text-sm"
             />
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">
             <input
               type="date"
               name="start_date"
               value={editData.start_date}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 text-sm"
+              className="form-input text-sm"
             />
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">
             <input
               type="date"
               name="end_date"
               value={editData.end_date}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 text-sm"
+              className="form-input text-sm"
             />
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">
             <select
               name="status"
               value={editData.status}
               onChange={handleEditChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer text-sm"
+              className="form-input cursor-pointer text-sm"
             >
               <option value="pending">Pending Review</option>
               <option value="approved">Approved</option>
@@ -254,17 +254,17 @@ function EmployeeCampaignManagement({ token, user }) {
               <option value="cancelled">Cancelled</option>
             </select>
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleSaveEdit(campaign.id, editData)}
-                className="bg-green-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500"
+                className="btn-success text-xs px-2 py-1"
               >
                 Save
               </button>
               <button
                 onClick={() => setEditingId(null)}
-                className="bg-gray-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+                className="btn-secondary text-xs px-2 py-1"
               >
                 Cancel
               </button>
@@ -277,12 +277,12 @@ function EmployeeCampaignManagement({ token, user }) {
     if (assigningId === campaign.id) {
       return (
         <tr className="assigning-row">
-          <td className="px-6 py-4 border-b border-gray-200" colSpan="8">
-            <div className="p-4 bg-yellow-50 rounded-lg">
+          <td className="table-cell" colSpan="8">
+            <div className="p-4 bg-yellow-50 border border-yellow-300">
               <h5 className="font-semibold text-gray-900 mb-3">
                 Assign Contractors to: {campaign.name}
               </h5>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto p-2 border border-gray-200 rounded">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 mb-4 max-h-48 overflow-y-auto p-2 border border-gray-200">
                 {contractors.map(contractor => (
                   <label key={contractor.id} className="flex items-center space-x-2 p-2 hover:bg-white rounded cursor-pointer">
                     <input
@@ -300,7 +300,7 @@ function EmployeeCampaignManagement({ token, user }) {
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={() => handleSaveAssignment(campaign.id)}
-                  className="bg-green-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500"
+                  className="btn-success text-sm"
                   disabled={selectedContractors.length === 0}
                 >
                   Assign Selected ({selectedContractors.length})
@@ -310,7 +310,7 @@ function EmployeeCampaignManagement({ token, user }) {
                     setAssigningId(null);
                     setSelectedContractors([]);
                   }}
-                  className="bg-gray-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+                  className="btn-secondary text-sm"
                 >
                   Cancel
                 </button>
@@ -323,32 +323,32 @@ function EmployeeCampaignManagement({ token, user }) {
 
     return (
       <tr className="hover:bg-gray-50">
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{campaign.id}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900 font-medium">{campaign.name}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{campaign.company_name}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">
+        <td className="table-cell">{campaign.id}</td>
+        <td className="table-cell font-medium">{campaign.name}</td>
+        <td className="table-cell">{campaign.company_name}</td>
+        <td className="table-cell">
           <div className="max-w-xs truncate" title={campaign.description}>
             {campaign.description}
           </div>
         </td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{formatDate(campaign.start_date)}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{formatDate(campaign.end_date)}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">
+        <td className="table-cell">{formatDate(campaign.start_date)}</td>
+        <td className="table-cell">{formatDate(campaign.end_date)}</td>
+        <td className="table-cell">
           <span className={`status-badge status-${campaign.status}`}>
             {getStatusDisplay(campaign.status)}
           </span>
         </td>
-        <td className="px-6 py-4 border-b border-gray-200">
+        <td className="table-cell">
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => handleEditCampaign(campaign)}
-              className="bg-blue-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 focus:ring-blue-500"
+              className="btn-primary text-xs px-2 py-1"
             >
               Edit
             </button>
             <button
               onClick={() => handleAssignContractors(campaign.id)}
-              className="bg-cyan-600 text-white px-2 py-1 text-xs border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-cyan-700 focus:ring-cyan-500"
+              className="btn-secondary text-xs px-2 py-1"
             >
               Assign
             </button>
@@ -359,16 +359,16 @@ function EmployeeCampaignManagement({ token, user }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8">
-      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">Employee Campaign Management</h3>
+    <div className="bg-white p-6 shadow-sm border border-gray-300 mt-8">
+      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-gray-800 pb-2 mb-6">Employee Campaign Management</h3>
       
       {/* Add Campaign Form */}
-      <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+      <div className="bg-gray-50 p-6 mb-8 border border-gray-300">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Create New Campaign</h4>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-row">
             <div className="mb-4">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Campaign Name *</label>
+              <label htmlFor="name" className="form-label">Campaign Name *</label>
               <input
                 type="text"
                 id="name"
@@ -377,19 +377,19 @@ function EmployeeCampaignManagement({ token, user }) {
                 onChange={handleInputChange}
                 required
                 placeholder="Enter campaign name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                className="form-input"
               />
             </div>
             
             <div className="mb-4">
-              <label htmlFor="company_id" className="block text-sm font-medium text-gray-700 mb-2">Company *</label>
+              <label htmlFor="company_id" className="form-label">Company *</label>
               <select
                 id="company_id"
                 name="company_id"
                 value={newCampaign.company_id}
                 onChange={handleInputChange}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer"
+                className="form-input cursor-pointer"
               >
                 <option value="">Select Company</option>
                 {companies.map(company => (
@@ -402,7 +402,7 @@ function EmployeeCampaignManagement({ token, user }) {
           </div>
           
           <div className="mb-4">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+            <label htmlFor="description" className="form-label">Description *</label>
             <textarea
               id="description"
               name="description"
@@ -411,32 +411,32 @@ function EmployeeCampaignManagement({ token, user }) {
               required
               placeholder="Describe the campaign goals, target audience, and requirements"
               rows="3"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 resize-vertical"
+              className="form-textarea"
             />
           </div>
           
           <div className="form-row">
             <div className="mb-4">
-              <label htmlFor="start_date" className="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+              <label htmlFor="start_date" className="form-label">Start Date</label>
               <input
                 type="date"
                 id="start_date"
                 name="start_date"
                 value={newCampaign.start_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                className="form-input"
               />
             </div>
             
             <div className="mb-4">
-              <label htmlFor="end_date" className="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+              <label htmlFor="end_date" className="form-label">End Date</label>
               <input
                 type="date"
                 id="end_date"
                 name="end_date"
                 value={newCampaign.end_date}
                 onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+                className="form-input"
               />
             </div>
           </div>
@@ -451,8 +451,8 @@ function EmployeeCampaignManagement({ token, user }) {
         </form>
       </div>
 
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
+      {error && <div className="alert-error">{error}</div>}
+      {success && <div className="alert-success">{success}</div>}
 
       {/* Campaigns List */}
       <div>
@@ -460,27 +460,27 @@ function EmployeeCampaignManagement({ token, user }) {
         
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+            <div className="spinner"></div>
             <span className="ml-2 text-gray-600">Loading campaigns...</span>
           </div>
         ) : campaigns.length === 0 ? (
-          <div className="no-campaigns">
-            <div className="empty-state-title">No campaigns found</div>
-            <div className="empty-state-description">Create the first campaign above!</div>
+          <div className="text-center py-8 text-gray-500">
+            <div className="text-lg font-medium">No campaigns found</div>
+            <div className="text-sm">Create the first campaign above!</div>
           </div>
         ) : (
-          <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
-            <table className="table">
+          <div className="bg-white border border-gray-300">
+            <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Company</th>
-                  <th>Description</th>
-                  <th>Start Date</th>
-                  <th>End Date</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+                  <th className="table-header">ID</th>
+                  <th className="table-header">Name</th>
+                  <th className="table-header">Company</th>
+                  <th className="table-header">Description</th>
+                  <th className="table-header">Start Date</th>
+                  <th className="table-header">End Date</th>
+                  <th className="table-header">Status</th>
+                  <th className="table-header">Actions</th>
                 </tr>
               </thead>
               <tbody>

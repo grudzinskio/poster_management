@@ -102,7 +102,7 @@ function ContractorCampaignManagement({ token, user }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+    <div className="bg-white p-6 shadow-sm border border-gray-300">
       <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">
         My Assigned Campaigns
       </h3>
@@ -120,7 +120,7 @@ function ContractorCampaignManagement({ token, user }) {
           Completed Campaigns
         </button>
       </div>
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
+      {error && <div className="alert-error">{error}</div>}
       {loading ? (
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>

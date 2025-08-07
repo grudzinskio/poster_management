@@ -98,27 +98,27 @@ function CompanyManagement({ token }) {
     if (editingId === company.id) {
       return (
         <tr className="editing-row">
-          <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{company.id}</td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">{company.id}</td>
+          <td className="table-cell">
             <input
               type="text"
               name="name"
               value={editData.name}
               onChange={handleEditChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+              className="form-input"
             />
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">
             <div className="flex flex-wrap gap-2">
               <button
-                className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 text-white hover:bg-green-700 focus:ring-green-500"
+                className="btn-success text-sm px-3 py-1.5"
                 onClick={() => handleSaveEdit(company.id, editData)}
               >
                 Save
               </button>
               <button
-                className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500"
+                className="btn-secondary text-sm px-3 py-1.5"
                 onClick={() => setEditingId(null)}
               >
                 Cancel
@@ -131,18 +131,18 @@ function CompanyManagement({ token }) {
 
     return (
       <tr className="hover:bg-gray-50">
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{company.id}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{company.name}</td>
-        <td className="px-6 py-4 border-b border-gray-200">
+        <td className="table-cell">{company.id}</td>
+        <td className="table-cell">{company.name}</td>
+        <td className="table-cell">
           <div className="flex flex-wrap gap-2">
             <button
-              className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500"
+              className="btn-primary text-sm px-3 py-1.5"
               onClick={() => handleEditCompany(company)}
             >
               Edit
             </button>
             <button
-              className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500"
+              className="btn-danger text-sm px-3 py-1.5"
               onClick={() => handleDeleteCompany(company.id)}
             >
               Delete
@@ -154,13 +154,13 @@ function CompanyManagement({ token }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8">
-      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">Company Management</h3>
+    <div className="bg-white p-6 shadow-sm border border-gray-300 mt-8">
+      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-gray-800 pb-2 mb-6">Company Management</h3>
       
-      <form onSubmit={handleAddCompany} className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+      <form onSubmit={handleAddCompany} className="bg-gray-50 p-6 mb-8 border border-gray-300">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New Company</h4>
         <div className="mb-4 max-w-md">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">Company Name *</label>
+          <label htmlFor="name" className="form-label">Company Name *</label>
           <input
             type="text"
             id="name"
@@ -169,28 +169,28 @@ function CompanyManagement({ token }) {
             onChange={handleNewCompanyChange}
             placeholder="Enter company name"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+            className="form-input"
           />
         </div>
-        <button type="submit" className="inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-green-600 text-white hover:bg-green-700 focus:ring-green-500">Add Company</button>
+        <button type="submit" className="btn-success">Add Company</button>
       </form>
 
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
+      {error && <div className="alert-error">{error}</div>}
+      {success && <div className="alert-success">{success}</div>}
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+          <div className="spinner"></div>
           <span className="ml-2 text-gray-600">Loading companies...</span>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
+        <div className="overflow-x-auto bg-white border border-gray-300">
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Actions</th>
+                <th className="table-header">ID</th>
+                <th className="table-header">Name</th>
+                <th className="table-header">Actions</th>
               </tr>
             </thead>
             <tbody>
