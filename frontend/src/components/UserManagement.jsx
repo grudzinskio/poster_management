@@ -174,26 +174,26 @@ function UserManagement({ token }) {
     if (editingId === user.id) {
       return (
         <tr key={user.id} className="bg-blue-50">
-          <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{user.id}</td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">{user.id}</td>
+          <td className="table-cell">
             <input
               type="text"
               name="username"
               value={editData.username}
               onChange={handleEditChange}
               required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+              className="form-input"
             />
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
-            <select name="role" value={editData.role} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer">
+          <td className="table-cell">
+            <select name="role" value={editData.role} onChange={handleEditChange} className="form-input cursor-pointer">
               <option value="client">Client</option>
               <option value="contractor">Contractor</option>
               <option value="employee">Employee</option>
             </select>
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
-            <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer">
+          <td className="table-cell">
+            <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="form-input cursor-pointer">
               <option value="">No Company</option>
               {companies.map(company => (
                 <option key={company.id} value={company.id}>
@@ -202,16 +202,16 @@ function UserManagement({ token }) {
               ))}
             </select>
           </td>
-          <td className="px-6 py-4 border-b border-gray-200">
+          <td className="table-cell">
             <div className="flex gap-2 flex-wrap">
               <button
-                className="bg-green-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500"
+                className="btn-success text-sm px-3 py-1.5"
                 onClick={() => handleSaveEdit(user.id, editData)}
               >
                 Save
               </button>
               <button
-                className="bg-gray-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+                className="btn-secondary text-sm px-3 py-1.5"
                 onClick={() => setEditingId(null)}
               >
                 Cancel
@@ -224,26 +224,26 @@ function UserManagement({ token }) {
 
     return (
       <tr key={user.id} className="hover:bg-gray-50">
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{user.id}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{user.username}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{user.role}</td>
-        <td className="px-6 py-4 border-b border-gray-200 text-sm text-gray-900">{user.company_name || 'No Company'}</td>
-        <td className="px-6 py-4 border-b border-gray-200">
+        <td className="table-cell">{user.id}</td>
+        <td className="table-cell">{user.username}</td>
+        <td className="table-cell">{user.role}</td>
+        <td className="table-cell">{user.company_name || 'No Company'}</td>
+        <td className="table-cell">
           <div className="flex gap-2 flex-wrap">
             <button
-              className="bg-blue-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 focus:ring-blue-500"
+              className="btn-primary text-sm px-3 py-1.5"
               onClick={() => handleEditUser(user)}
             >
               Edit
             </button>
             <button
-              className="bg-gray-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+              className="btn-secondary text-sm px-3 py-1.5"
               onClick={() => handleChangePassword(user.id)}
             >
               Password
             </button>
             <button
-              className="bg-red-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 focus:ring-red-500"
+              className="btn-danger text-sm px-3 py-1.5"
               onClick={() => handleDeleteUser(user.id)}
             >
               Delete
@@ -257,7 +257,7 @@ function UserManagement({ token }) {
   // Password change row component
   const PasswordChangeRow = ({ userId }) => (
     <tr key={`password-${userId}`} className="bg-yellow-50">
-      <td colSpan="4" className="px-6 py-4 border-b border-gray-200">
+      <td colSpan="4" className="table-cell">
         <div className="flex items-center gap-4">
           <label htmlFor={`new-password-${userId}`} className="text-sm font-medium text-gray-700">
             New Password:
@@ -275,16 +275,16 @@ function UserManagement({ token }) {
           />
         </div>
       </td>
-      <td className="px-6 py-4 border-b border-gray-200">
+      <td className="table-cell">
         <div className="flex gap-2">
           <button
-            className="bg-green-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500"
+            className="btn-success text-sm px-3 py-1.5"
             onClick={() => handleSavePassword(userId)}
           >
             Save Password
           </button>
           <button
-            className="bg-gray-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
+            className="btn-secondary text-sm px-3 py-1.5"
             onClick={handleCancelPasswordChange}
           >
             Cancel
@@ -295,12 +295,12 @@ function UserManagement({ token }) {
   );
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">
+    <div className="bg-white p-6 shadow-sm border border-gray-300">
+      <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-gray-800 pb-2 mb-6">
         User Management
       </h3>
       
-      <form onSubmit={handleAddUser} className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+      <form onSubmit={handleAddUser} className="bg-gray-50 p-6 mb-8 border border-gray-300">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New User</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <input
@@ -310,7 +310,7 @@ function UserManagement({ token }) {
             onChange={handleNewUserChange}
             placeholder="Username *"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+            className="form-input"
           />
           <input
             type="password"
@@ -319,14 +319,14 @@ function UserManagement({ token }) {
             onChange={handleNewUserChange}
             placeholder="Password *"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500"
+            className="form-input"
           />
-          <select name="role" value={newUser.role} onChange={handleNewUserChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer">
+          <select name="role" value={newUser.role} onChange={handleNewUserChange} className="form-input cursor-pointer">
             <option value="client">Client</option>
             <option value="contractor">Contractor</option>
             <option value="employee">Employee</option>
           </select>
-          <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200 text-gray-900 placeholder-gray-500 cursor-pointer">
+          <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
             <option value="">No Company</option>
             {companies.map(company => (
               <option key={company.id} value={company.id}>
@@ -335,27 +335,27 @@ function UserManagement({ token }) {
             ))}
           </select>
         </div>
-        <button type="submit" className="bg-green-600 text-white px-4 py-2 border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-green-700 focus:ring-green-500">Add User</button>
+        <button type="submit" className="btn-success">Add User</button>
       </form>
 
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
+      {error && <div className="alert-error">{error}</div>}
+      {success && <div className="alert-success">{success}</div>}
 
       {loading ? (
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
+          <div className="spinner"></div>
           <span className="ml-2 text-gray-600">Loading users...</span>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-lg border border-gray-200">
+        <div className="overflow-x-auto bg-white border border-gray-300">
           <table className="table">
             <thead>
               <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Role</th>
-                <th>Company</th>
-                <th>Actions</th>
+                <th className="table-header">ID</th>
+                <th className="table-header">Username</th>
+                <th className="table-header">Role</th>
+                <th className="table-header">Company</th>
+                <th className="table-header">Actions</th>
               </tr>
             </thead>
             <tbody>

@@ -359,11 +359,11 @@ function EmployeeCampaignManagement({ token, user }) {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mt-8">
+    <div className="bg-white p-6 shadow-sm border border-gray-300 mt-8">
       <h3 className="text-2xl font-bold text-gray-900 border-b-2 border-blue-600 pb-2 mb-6">Employee Campaign Management</h3>
       
       {/* Add Campaign Form */}
-      <div className="bg-gray-50 p-6 rounded-lg mb-8 border border-gray-200">
+      <div className="bg-gray-50 p-6 mb-8 border border-gray-300">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Create New Campaign</h4>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="form-row">
@@ -451,8 +451,8 @@ function EmployeeCampaignManagement({ token, user }) {
         </form>
       </div>
 
-      {error && <div className="px-4 py-3 rounded-lg mb-4 border bg-red-50 border-red-200 text-red-700">{error}</div>}
-      {success && <div className="px-4 py-3 rounded-lg mb-4 border bg-green-50 border-green-200 text-green-700">{success}</div>}
+      {error && <div className="alert-error">{error}</div>}
+      {success && <div className="alert-success">{success}</div>}
 
       {/* Campaigns List */}
       <div>
