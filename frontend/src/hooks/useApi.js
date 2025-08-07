@@ -12,9 +12,13 @@ export const useApi = (token = null) => {
     
     try {
       const headers = {
-        'Content-Type': 'application/json',
         ...options.headers,
       };
+      
+      // Only set Content-Type if not already specified and not FormData
+      if (!headers['Content-Type'] && !(options.body instanceof FormData)) {
+        headers['Content-Type'] = 'application/json';
+      }
       
       // Only add Authorization header if token exists
       if (token) {
@@ -47,15 +51,23 @@ export const useApi = (token = null) => {
 
   const get = (url) => apiCall(url);
   
-  const post = (url, data) => apiCall(url, {
-    method: 'POST',
-    body: JSON.stringify(data),
-  });
+  const post = (url, data, options = {}) => {
+    const body = data instanceof FormData ? data : JSON.stringify(data);
+    return apiCall(url, {
+      method: 'POST',
+      body,
+      ...options,
+    });
+  };
   
-  const put = (url, data) => apiCall(url, {
-    method: 'PUT',
-    body: JSON.stringify(data),
-  });
+  const put = (url, data, options = {}) => {
+    const body = data instanceof FormData ? data : JSON.stringify(data);
+    return apiCall(url, {
+      method: 'PUT',
+      body,
+      ...options,
+    });
+  };
   
   const del = (url) => apiCall(url, {
     method: 'DELETE',
@@ -72,3 +84,6 @@ export const useApi = (token = null) => {
     setError 
   };
 };
+
+// Usage example for uploading images
+// await post(`/campaigns/${campaignId}/images`, formData);
