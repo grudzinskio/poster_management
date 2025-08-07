@@ -36,7 +36,7 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-white">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gray-900">
       {/* Login form */}
       <div className="relative z-10 w-full max-w-md">
         <div className="bg-white border border-gray-300 p-8 shadow-lg">
