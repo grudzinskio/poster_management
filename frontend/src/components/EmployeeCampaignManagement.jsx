@@ -145,7 +145,7 @@ function EmployeeCampaignManagement({ token, user }) {
     setSuccess('');
     
     try {
-      await put(`/campaigns/${campaignId}/assign`, { 
+      await post(`/campaigns/${campaignId}/assign`, { 
         contractor_ids: selectedContractors 
       });
       setAssigningId(null);
