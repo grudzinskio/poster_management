@@ -1,6 +1,6 @@
 // frontend/src/components/UserManagement.jsx
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 
 function UserManagement({ token }) {
