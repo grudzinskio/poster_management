@@ -240,7 +240,7 @@ function UserManagement({ token }) {
               className="bg-gray-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 focus:ring-gray-500"
               onClick={() => handleChangePassword(user.id)}
             >
-              Change Password
+              Password
             </button>
             <button
               className="bg-red-600 text-white px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-700 focus:ring-red-500"
