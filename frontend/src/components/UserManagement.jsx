@@ -347,8 +347,8 @@ function UserManagement({ token }) {
           <span className="ml-2 text-gray-600">Loading users...</span>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white border border-gray-300">
-          <table className="table">
+        <div className="bg-white border border-gray-300">
+          <table className="w-full border-collapse">
             <thead>
               <tr>
                 <th className="table-header">ID</th>
