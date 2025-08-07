@@ -36,10 +36,18 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gray-900">
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800">
+      {/* Background geometric elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-32 w-80 h-80 bg-blue-500/5 transform rotate-45"></div>
+        <div className="absolute top-1/4 -left-32 w-64 h-64 bg-gray-500/10 transform rotate-12"></div>
+        <div className="absolute -bottom-32 right-1/4 w-96 h-96 bg-slate-500/5 transform -rotate-12"></div>
+        <div className="absolute top-3/4 left-1/4 w-32 h-32 bg-gray-400/10 transform rotate-45"></div>
+      </div>
+      
       {/* Login form */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="bg-white border border-gray-300 p-8 shadow-lg">
+        <div className="bg-white/95 backdrop-blur-sm border border-gray-300 p-8 shadow-2xl">
           <div className="text-center mb-8">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-800 mb-4 shadow-md">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
