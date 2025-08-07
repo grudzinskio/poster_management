@@ -360,12 +360,12 @@ function UserManagement({ token }) {
             </thead>
             <tbody>
               {users.map((user) => (
-                <>
+                <React.Fragment key={`user-fragment-${user.id}`}>
                   <UserRow key={user.id} user={user} />
                   {changingPasswordId === user.id && (
                     <PasswordChangeRow key={`password-${user.id}`} userId={user.id} />
                   )}
-                </>
+                </React.Fragment>
               ))}
             </tbody>
           </table>

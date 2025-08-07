@@ -107,7 +107,16 @@ function EmployeeCampaignManagement({ token, user }) {
     setSuccess('');
     
     try {
-      const updatedCampaign = await put(`/campaigns/${campaignId}`, updatedData);
+      // Ensure dates are properly formatted or null
+      const cleanedData = {
+        ...updatedData,
+        start_date: updatedData.start_date || null,
+        end_date: updatedData.end_date || null
+      };
+      
+      console.log('Sending update data:', cleanedData); // Add this debug log
+      
+      const updatedCampaign = await put(`/campaigns/${campaignId}`, cleanedData);
       setCampaigns(campaigns.map(campaign => 
         campaign.id === campaignId ? updatedCampaign : campaign
       ));
@@ -115,6 +124,7 @@ function EmployeeCampaignManagement({ token, user }) {
       setSuccess('Campaign updated successfully!');
     } catch (err) {
       console.error('Error updating campaign:', err);
+      setError('Failed to update campaign. Please check your input and try again.');
     }
   };
 
@@ -179,11 +189,14 @@ function EmployeeCampaignManagement({ token, user }) {
       description: campaign.description,
       start_date: campaign.start_date ? campaign.start_date.split('T')[0] : '',
       end_date: campaign.end_date ? campaign.end_date.split('T')[0] : '',
-      status: campaign.status
+      status: campaign.status,
+      company_id: campaign.company_id // Add this line
     });
 
     const handleEditChange = (e) => {
-      setEditData({ ...editData, [e.target.name]: e.target.value });
+      const newData = { ...editData, [e.target.name]: e.target.value };
+      console.log('Edit data being updated:', newData); // Debug log
+      setEditData(newData);
     };
 
     if (editingId === campaign.id) {

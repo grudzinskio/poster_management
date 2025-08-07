@@ -159,17 +159,20 @@ async function updateCampaign(req, res) {
   try {
     const conn = await pool.getConnection();
     
-    // Verify campaign exists
-    const [existingCampaign] = await conn.execute('SELECT id FROM campaigns WHERE id = ?', [id]);
+    // Verify campaign exists and get current company_id if not provided
+    const [existingCampaign] = await conn.execute('SELECT id, company_id FROM campaigns WHERE id = ?', [id]);
     if (existingCampaign.length === 0) {
       conn.release();
       return res.status(404).json({ error: 'Campaign not found' });
     }
     
+    // Use existing company_id if not provided in request
+    const finalCompanyId = company_id || existingCampaign[0].company_id;
+    
     // Update campaign
     const [result] = await conn.execute(
       'UPDATE campaigns SET name = ?, description = ?, start_date = ?, end_date = ?, company_id = ? WHERE id = ?',
-      [name, description, start_date || null, end_date || null, company_id, id]
+      [name, description, start_date || null, end_date || null, finalCompanyId, id]
     );
     
     // Retrieve the updated campaign with company information
