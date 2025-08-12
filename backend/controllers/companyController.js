@@ -1,7 +1,7 @@
 // controllers/companyController.js
 // Company management controller - CRUD operations for companies
 
-const { pool } = require('../config/database');
+const knex = require('../config/knex');
 
 /**
  * GET /api/companies - Retrieve all companies
@@ -9,10 +9,11 @@ const { pool } = require('../config/database');
  */
 async function getAllCompanies(req, res) {
   try {
-    const conn = await pool.getConnection();
-    const [rows] = await conn.execute('SELECT id, name FROM companies ORDER BY name');
-    conn.release();
-    res.json(rows);
+    const companies = await knex('companies')
+      .select('id', 'name')
+      .orderBy('name');
+    
+    res.json(companies);
   } catch (error) {
     console.error('Error fetching companies:', error);
     res.status(500).json({ error: 'Failed to fetch companies' });
@@ -31,15 +32,10 @@ async function createCompany(req, res) {
   }
   
   try {
-    const conn = await pool.getConnection();
-    const [result] = await conn.execute(
-      'INSERT INTO companies (name) VALUES (?)',
-      [name] 
-    );
-    conn.release();
+    const [insertId] = await knex('companies').insert({ name });
     
     res.status(201).json({ 
-      id: result.insertId, 
+      id: insertId, 
       name
     });
   } catch (error) {
@@ -66,19 +62,17 @@ async function updateCompany(req, res) {
   }
   
   try {
-    const conn = await pool.getConnection();
-    const [result] = await conn.execute(
-      'UPDATE companies SET name = ? WHERE id = ?',
-      [name, id]
-    );
-    conn.release();
+    const affectedRows = await knex('companies')
+      .where('id', id)
+      .update({ name });
     
-    if (result.affectedRows === 0) {
+    if (affectedRows === 0) {
       return res.status(404).json({ error: 'Company not found' });
     }
     
     res.json({ id: parseInt(id), name });
   } catch (error) {
+    // Handle MySQL duplicate entry error
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Company name already exists' });
     }
@@ -96,22 +90,27 @@ async function deleteCompany(req, res) {
   const { id } = req.params;
   
   try {
-    const conn = await pool.getConnection();
+    // Check if company has associated users
+    const userCount = await knex('users')
+      .where('company_id', id)
+      .count('id as count')
+      .first();
     
-    // Check for foreign key constraints before deletion
-    const [userCheck] = await conn.execute('SELECT COUNT(*) as count FROM users WHERE company_id = ?', [id]);
-    if (userCheck[0].count > 0) {
-      conn.release();
-      return res.status(400).json({ error: 'Cannot delete company with associated users. Please reassign users first.' });
+    if (userCount.count > 0) {
+      return res.status(400).json({ 
+        error: 'Cannot delete company with associated users. Please reassign or delete users first.' 
+      });
     }
     
-    const [result] = await conn.execute('DELETE FROM companies WHERE id = ?', [id]);
-    conn.release();
-
-    if (result.affectedRows === 0) {
+    const affectedRows = await knex('companies')
+      .where('id', id)
+      .del();
+    
+    if (affectedRows === 0) {
       return res.status(404).json({ error: 'Company not found' });
     }
-    res.status(204).send();
+    
+    res.json({ message: 'Company deleted successfully' });
   } catch (error) {
     console.error('Error deleting company:', error);
     res.status(500).json({ error: 'Failed to delete company' });

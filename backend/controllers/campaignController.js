@@ -1,7 +1,7 @@
 // controllers/campaignController.js
 // Campaign management controller - CRUD operations for campaigns
 
-const { pool } = require('../config/database');
+const knex = require('../config/knex');
 
 /**
  * GET /api/campaigns - Retrieve campaigns based on user role
@@ -12,43 +12,24 @@ const { pool } = require('../config/database');
  */
 async function getAllCampaigns(req, res) {
   try {
-    const conn = await pool.getConnection();
-    let query, params;
-    
+    let query = knex('campaigns as c')
+      .join('companies as co', 'c.company_id', 'co.id')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .orderBy('c.created_at', 'desc');
+
     if (req.user.role === 'client') {
       // Role-based query: Clients can only see campaigns for their company
-      query = `
-        SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
-        FROM campaigns c
-        JOIN companies co ON c.company_id = co.id
-        WHERE c.company_id = ?
-        ORDER BY c.created_at DESC
-      `;
-      params = [req.user.company_id];
+      query = query.where('c.company_id', req.user.company_id);
     } else if (req.user.role === 'contractor') {
       // Contractors only see campaigns assigned to them that are in progress
-      query = `
-        SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
-        FROM campaigns c
-        JOIN companies co ON c.company_id = co.id
-        JOIN campaign_assignments ca ON c.id = ca.campaign_id
-        WHERE ca.contractor_id = ? AND c.status IN ('approved', 'in_progress')
-        ORDER BY c.created_at DESC
-      `;
-      params = [req.user.id];
-    } else {
-      // Employees can see all campaigns across companies
-      query = `
-        SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
-        FROM campaigns c
-        JOIN companies co ON c.company_id = co.id
-        ORDER BY c.created_at DESC
-      `;
-      params = [];
+      query = query
+        .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
+        .where('ca.contractor_id', req.user.id)
+        .whereIn('c.status', ['approved', 'in_progress']);
     }
-    
-    const [rows] = await conn.execute(query, params);
-    conn.release();
+    // Employees can see all campaigns (no additional filtering)
+
+    const rows = await query;
     res.json(rows);
   } catch (error) {
     console.error('Error fetching campaigns:', error);
@@ -66,22 +47,22 @@ async function getCompletedCampaigns(req, res) {
   }
 
   try {
-    const conn = await pool.getConnection();
-    const query = `
-      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name,
-             COUNT(ci.id) as total_images,
-             COUNT(CASE WHEN ci.status = 'approved' THEN 1 END) as approved_images
-      FROM campaigns c
-      JOIN companies co ON c.company_id = co.id
-      JOIN campaign_assignments ca ON c.id = ca.campaign_id
-      LEFT JOIN campaign_images ci ON c.id = ci.campaign_id AND ci.uploaded_by = ?
-      WHERE ca.contractor_id = ? AND c.status = 'completed'
-      GROUP BY c.id
-      ORDER BY c.created_at DESC
-    `;
-    
-    const [rows] = await conn.execute(query, [req.user.id, req.user.id]);
-    conn.release();
+    const rows = await knex('campaigns as c')
+      .join('companies as co', 'c.company_id', 'co.id')
+      .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
+      .leftJoin('campaign_images as ci', function() {
+        this.on('c.id', 'ci.campaign_id').andOn('ci.uploaded_by', knex.raw('?', [req.user.id]));
+      })
+      .select(
+        'c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name',
+        knex.raw('COUNT(ci.id) as total_images'),
+        knex.raw("COUNT(CASE WHEN ci.status = 'approved' THEN 1 END) as approved_images")
+      )
+      .where('ca.contractor_id', req.user.id)
+      .where('c.status', 'completed')
+      .groupBy('c.id')
+      .orderBy('c.created_at', 'desc');
+
     res.json(rows);
   } catch (error) {
     console.error('Error fetching completed campaigns:', error);
@@ -109,33 +90,32 @@ async function createCampaign(req, res) {
   }
   
   try {
-    const conn = await pool.getConnection();
-    
     // Role-based company assignment
-    // For clients, use their company_id; for employees, company_id should be provided in request
     const company_id = req.user.role === 'client' ? req.user.company_id : req.body.company_id;
     
     if (!company_id) {
-      conn.release();
       return res.status(400).json({ error: 'Company ID is required' });
     }
     
     // Insert campaign with default 'pending' status
-    const [result] = await conn.execute(
-      'INSERT INTO campaigns (name, description, company_id, status, start_date, end_date, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [name, description, company_id, 'pending', start_date || null, end_date || null, req.user.id]
-    );
+    const [insertId] = await knex('campaigns').insert({
+      name,
+      description,
+      company_id,
+      status: 'pending',
+      start_date: start_date || null,
+      end_date: end_date || null,
+      created_by: req.user.id
+    });
     
     // Retrieve the created campaign with company information
-    const [campaignRows] = await conn.execute(`
-      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
-      FROM campaigns c
-      JOIN companies co ON c.company_id = co.id
-      WHERE c.id = ?
-    `, [result.insertId]);
+    const campaign = await knex('campaigns as c')
+      .join('companies as co', 'c.company_id', 'co.id')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .where('c.id', insertId)
+      .first();
     
-    conn.release();
-    res.status(201).json(campaignRows[0]);
+    res.status(201).json(campaign);
   } catch (error) {
     console.error('Error creating campaign:', error);
     res.status(500).json({ error: 'Failed to create campaign' });
@@ -157,34 +137,38 @@ async function updateCampaign(req, res) {
   }
   
   try {
-    const conn = await pool.getConnection();
-    
     // Verify campaign exists and get current company_id if not provided
-    const [existingCampaign] = await conn.execute('SELECT id, company_id FROM campaigns WHERE id = ?', [id]);
-    if (existingCampaign.length === 0) {
-      conn.release();
+    const existingCampaign = await knex('campaigns')
+      .select('id', 'company_id')
+      .where('id', id)
+      .first();
+      
+    if (!existingCampaign) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
     
     // Use existing company_id if not provided in request
-    const finalCompanyId = company_id || existingCampaign[0].company_id;
+    const finalCompanyId = company_id || existingCampaign.company_id;
     
     // Update campaign
-    const [result] = await conn.execute(
-      'UPDATE campaigns SET name = ?, description = ?, start_date = ?, end_date = ?, company_id = ? WHERE id = ?',
-      [name, description, start_date || null, end_date || null, finalCompanyId, id]
-    );
+    await knex('campaigns')
+      .where('id', id)
+      .update({
+        name,
+        description,
+        start_date: start_date || null,
+        end_date: end_date || null,
+        company_id: finalCompanyId
+      });
     
     // Retrieve the updated campaign with company information
-    const [campaignRows] = await conn.execute(`
-      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, c.company_id, co.name as company_name
-      FROM campaigns c
-      JOIN companies co ON c.company_id = co.id
-      WHERE c.id = ?
-    `, [id]);
+    const campaign = await knex('campaigns as c')
+      .join('companies as co', 'c.company_id', 'co.id')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'c.company_id', 'co.name as company_name')
+      .where('c.id', id)
+      .first();
     
-    conn.release();
-    res.json(campaignRows[0]);
+    res.json(campaign);
   } catch (error) {
     console.error('Error updating campaign:', error);
     res.status(500).json({ error: 'Failed to update campaign' });
@@ -207,27 +191,22 @@ async function updateCampaignStatus(req, res) {
   }
   
   try {
-    const conn = await pool.getConnection();
-    const [result] = await conn.execute(
-      'UPDATE campaigns SET status = ? WHERE id = ?',
-      [status, id]
-    );
+    const affectedRows = await knex('campaigns')
+      .where('id', id)
+      .update({ status });
     
-    if (result.affectedRows === 0) {
-      conn.release();
+    if (affectedRows === 0) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
     
     // Retrieve the updated campaign with company information
-    const [campaignRows] = await conn.execute(`
-      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
-      FROM campaigns c
-      JOIN companies co ON c.company_id = co.id
-      WHERE c.id = ?
-    `, [id]);
+    const campaign = await knex('campaigns as c')
+      .join('companies as co', 'c.company_id', 'co.id')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .where('c.id', id)
+      .first();
     
-    conn.release();
-    res.json(campaignRows[0]);
+    res.json(campaign);
   } catch (error) {
     console.error('Error updating campaign status:', error);
     res.status(500).json({ error: 'Failed to update campaign status' });
@@ -247,25 +226,25 @@ async function assignContractors(req, res) {
   }
 
   try {
-    const conn = await pool.getConnection();
-    
     // Verify campaign exists
-    const [campaign] = await conn.execute('SELECT id FROM campaigns WHERE id = ?', [id]);
-    if (campaign.length === 0) {
-      conn.release();
+    const campaign = await knex('campaigns').where('id', id).first();
+    if (!campaign) {
       return res.status(404).json({ error: 'Campaign not found' });
     }
 
-    // Delete existing assignments for this campaign
-    await conn.execute('DELETE FROM campaign_assignments WHERE campaign_id = ?', [id]);
+    // Use transaction for atomic operation
+    await knex.transaction(async (trx) => {
+      // Delete existing assignments for this campaign
+      await trx('campaign_assignments').where('campaign_id', id).del();
 
-    // Insert new assignments
-    const insertPromises = contractor_ids.map(contractor_id =>
-      conn.execute('INSERT INTO campaign_assignments (campaign_id, contractor_id) VALUES (?, ?)', [id, contractor_id])
-    );
-    
-    await Promise.all(insertPromises);
-    conn.release();
+      // Insert new assignments
+      const assignments = contractor_ids.map(contractor_id => ({
+        campaign_id: id,
+        contractor_id
+      }));
+      
+      await trx('campaign_assignments').insert(assignments);
+    });
     
     res.json({ message: 'Contractors assigned successfully' });
   } catch (error) {
@@ -289,47 +268,40 @@ async function updateCampaignStatusByContractor(req, res) {
   };
 
   try {
-    const conn = await pool.getConnection();
-    
     // Verify contractor is assigned to this campaign
-    const [assignment] = await conn.execute(`
-      SELECT c.status as current_status 
-      FROM campaigns c
-      JOIN campaign_assignments ca ON c.id = ca.campaign_id
-      WHERE c.id = ? AND ca.contractor_id = ?
-    `, [id, req.user.id]);
+    const assignment = await knex('campaigns as c')
+      .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
+      .select('c.status as current_status')
+      .where('c.id', id)
+      .where('ca.contractor_id', req.user.id)
+      .first();
 
-    if (assignment.length === 0) {
-      conn.release();
+    if (!assignment) {
       return res.status(404).json({ error: 'Campaign not found or not assigned to you' });
     }
 
-    const currentStatus = assignment[0].current_status;
+    const currentStatus = assignment.current_status;
     
     // Check if the status update is allowed
     if (!allowedStatusUpdates[currentStatus] || !allowedStatusUpdates[currentStatus].includes(status)) {
-      conn.release();
       return res.status(400).json({ 
         error: `Cannot update status from ${currentStatus} to ${status}` 
       });
     }
 
     // Update campaign status
-    const [result] = await conn.execute(
-      'UPDATE campaigns SET status = ? WHERE id = ?',
-      [status, id]
-    );
+    await knex('campaigns')
+      .where('id', id)
+      .update({ status });
     
     // Retrieve the updated campaign with company information
-    const [campaignRows] = await conn.execute(`
-      SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name
-      FROM campaigns c
-      JOIN companies co ON c.company_id = co.id
-      WHERE c.id = ?
-    `, [id]);
+    const campaign = await knex('campaigns as c')
+      .join('companies as co', 'c.company_id', 'co.id')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .where('c.id', id)
+      .first();
     
-    conn.release();
-    res.json(campaignRows[0]);
+    res.json(campaign);
   } catch (error) {
     console.error('Error updating campaign status:', error);
     res.status(500).json({ error: 'Failed to update campaign status' });
@@ -344,20 +316,14 @@ const getContractorCampaigns = async (req, res) => {
       return res.status(403).json({ error: 'Access denied. Contractor role required.' });
     }
 
-    const conn = await pool.getConnection();
-    
     // Get campaigns where this contractor is assigned
-    const [campaigns] = await conn.execute(
-      `SELECT c.id, c.name, c.description, c.status, c.start_date, c.end_date, c.created_at, co.name as company_name 
-       FROM campaigns c 
-       LEFT JOIN companies co ON c.company_id = co.id 
-       JOIN campaign_assignments ca ON c.id = ca.campaign_id
-       WHERE ca.contractor_id = ?
-       ORDER BY c.created_at DESC`,
-      [req.user.id]
-    );
+    const campaigns = await knex('campaigns as c')
+      .leftJoin('companies as co', 'c.company_id', 'co.id')
+      .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .where('ca.contractor_id', req.user.id)
+      .orderBy('c.created_at', 'desc');
 
-    conn.release();
     res.json(campaigns);
   } catch (error) {
     console.error('Error fetching contractor campaigns:', error);

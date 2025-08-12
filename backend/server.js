@@ -10,7 +10,7 @@ const express = require('express');
 const cors = require('cors');
 
 // Import configuration and utilities
-const { testDatabaseConnection } = require('./config/database');
+const { testDatabaseConnection, testKnexConnection } = require('./config/database');
 const routes = require('./routes');
 
 // Express.js application instance
@@ -33,8 +33,9 @@ app.use(routes);
  */
 async function startServer() {
   try {
-    // Test database connection on startup
+    // Test both database connections on startup
     await testDatabaseConnection();
+    await testKnexConnection();
     
     // Start Express server on specified port
     app.listen(PORT, () => {

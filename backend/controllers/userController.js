@@ -1,7 +1,7 @@
 // controllers/userController.js
 // User management controller - CRUD operations for users
 
-const { pool } = require('../config/database');
+const knex = require('../config/knex');
 const { hashPassword } = require('../services/authService');
 
 /**
@@ -9,25 +9,18 @@ const { hashPassword } = require('../services/authService');
  */
 async function getAllUsers(req, res) {
   try {
-    const conn = await pool.getConnection();
     const { role } = req.query;
     
-    let query = `
-      SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
-      FROM users u
-      LEFT JOIN companies c ON u.company_id = c.id
-    `;
-    let params = [];
+    let query = knex('users as u')
+      .leftJoin('companies as c', 'u.company_id', 'c.id')
+      .select('u.id', 'u.username', 'u.role', 'u.company_id', 'c.name as company_name')
+      .orderBy('u.id', 'desc');
     
     if (role) {
-      query += ' WHERE u.role = ?';
-      params = [role];
+      query = query.where('u.role', role);
     }
     
-    query += ' ORDER BY u.id DESC';
-    
-    const [rows] = await conn.execute(query, params);
-    conn.release();
+    const rows = await query;
     res.json(rows);
   } catch (error) {
     console.error('Error fetching users:', error);
@@ -50,24 +43,22 @@ async function createUser(req, res) {
     // Hash the password before storing it
     const hashedPassword = await hashPassword(password);
     
-    const conn = await pool.getConnection();
     // Store hashed password instead of plaintext
-    const [result] = await conn.execute(
-      'INSERT INTO users (username, password, role, company_id) VALUES (?, ?, ?, ?)',
-      [username, hashedPassword, role, company_id || null]
-    );
+    const [insertId] = await knex('users').insert({
+      username,
+      password: hashedPassword,
+      role,
+      company_id: company_id || null
+    });
     
     // Retrieve the created user with company information using JOIN
-    const [userRows] = await conn.execute(`
-      SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
-      FROM users u
-      LEFT JOIN companies c ON u.company_id = c.id
-      WHERE u.id = ?
-    `, [result.insertId]);
+    const user = await knex('users as u')
+      .leftJoin('companies as c', 'u.company_id', 'c.id')
+      .select('u.id', 'u.username', 'u.role', 'u.company_id', 'c.name as company_name')
+      .where('u.id', insertId)
+      .first();
     
-    conn.release();
-    
-    res.status(201).json(userRows[0]);
+    res.status(201).json(user);
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Username already exists' });
@@ -91,28 +82,26 @@ async function updateUser(req, res) {
   }
   
   try {
-    const conn = await pool.getConnection();
-    const [result] = await conn.execute(
-      'UPDATE users SET username = ?, role = ?, company_id = ? WHERE id = ?',
-      [username, role, company_id || null, id]
-    );
+    const affectedRows = await knex('users')
+      .where('id', id)
+      .update({
+        username,
+        role,
+        company_id: company_id || null
+      });
     
-    if (result.affectedRows === 0) {
-      conn.release();
+    if (affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Retrieve updated user with company information
-    const [userRows] = await conn.execute(`
-      SELECT u.id, u.username, u.role, u.company_id, c.name as company_name
-      FROM users u
-      LEFT JOIN companies c ON u.company_id = c.id
-      WHERE u.id = ?
-    `, [id]);
+    // Retrieve the updated user with company information
+    const user = await knex('users as u')
+      .leftJoin('companies as c', 'u.company_id', 'c.id')
+      .select('u.id', 'u.username', 'u.role', 'u.company_id', 'c.name as company_name')
+      .where('u.id', id)
+      .first();
     
-    conn.release();
-    
-    res.json(userRows[0]);
+    res.json(user);
   } catch (error) {
     if (error.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Username already exists' });
@@ -136,29 +125,21 @@ async function updateUserPassword(req, res) {
     return res.status(400).json({ error: 'Password is required' });
   }
   
-  if (password.length < 6) {
-    return res.status(400).json({ error: 'Password must be at least 6 characters long' });
-  }
-  
   try {
-    // Hash the new password
+    // Hash the new password before storing it
     const hashedPassword = await hashPassword(password);
     
-    const conn = await pool.getConnection();
-    const [result] = await conn.execute(
-      'UPDATE users SET password = ? WHERE id = ?',
-      [hashedPassword, id]
-    );
+    const affectedRows = await knex('users')
+      .where('id', id)
+      .update({ password: hashedPassword });
     
-    conn.release();
-    
-    if (result.affectedRows === 0) {
+    if (affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    res.json({ success: true, message: 'Password updated successfully' });
+    res.json({ message: 'Password updated successfully' });
   } catch (error) {
-    console.error('Error updating password:', error);
+    console.error('Error updating user password:', error);
     res.status(500).json({ error: 'Failed to update password' });
   }
 }
@@ -170,39 +151,24 @@ async function updateUserPassword(req, res) {
  */
 async function deleteUser(req, res) {
   const { id } = req.params;
+  
   // Prevent users from deleting their own account
-  if (parseInt(id, 10) === req.user.id) {
-    return res.status(400).json({ error: "You cannot delete your own account." });
+  if (parseInt(id) === req.user.id) {
+    return res.status(400).json({ error: 'Cannot delete your own account' });
   }
-
+  
   try {
-    const conn = await pool.getConnection();
+    const affectedRows = await knex('users')
+      .where('id', id)
+      .del();
     
-    // First, update any campaigns created by this user to set created_by to NULL
-    // This maintains the campaign-company association while removing the user reference
-    await conn.execute(
-      'UPDATE campaigns SET created_by = NULL WHERE created_by = ?',
-      [id]
-    );
-    
-    // Now safely delete the user
-    const [result] = await conn.execute('DELETE FROM users WHERE id = ?', [id]);
-    conn.release();
-
-    if (result.affectedRows === 0) {
+    if (affectedRows === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.status(204).send();
+    
+    res.json({ message: 'User deleted successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
-    
-    // Handle specific database constraint errors
-    if (error.code === 'ER_ROW_IS_REFERENCED_2') {
-      return res.status(400).json({ 
-        error: 'Cannot delete user because they have associated data. Please contact an administrator.' 
-      });
-    }
-    
     res.status(500).json({ error: 'Failed to delete user' });
   }
 }

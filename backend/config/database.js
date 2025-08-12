@@ -2,6 +2,7 @@
 // Database configuration and connection pool management
 
 const mysql = require('mysql2/promise');
+const knex = require('./knex');
 
 // MySQL connection pool configuration using environment variables
 const dbConfig = {
@@ -33,7 +34,22 @@ async function testDatabaseConnection() {
   }
 }
 
+/**
+ * Test database connectivity using Knex
+ */
+async function testKnexConnection() {
+  try {
+    await knex.raw('SELECT 1');
+    console.log('Connected to MariaDB database via Knex');
+  } catch (error) {
+    console.error('Failed to connect to database via Knex:', error);
+    throw error;
+  }
+}
+
 module.exports = {
   pool,
-  testDatabaseConnection
+  testDatabaseConnection,
+  knex,
+  testKnexConnection
 };
