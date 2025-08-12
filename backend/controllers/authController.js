@@ -2,7 +2,7 @@
 // Authentication controller handling login logic
 
 const knex = require('../config/knex');
-const { hashPassword, comparePassword, isPasswordHashed, generateToken } = require('../services/authService');
+const { hashPassword, comparePassword, isPasswordHashed, generateToken, getUserRoles } = require('../services/authService');
 
 /**
  * User login controller
@@ -18,7 +18,7 @@ async function login(req, res) {
   }
 
   try {
-    // Find user using Knex
+    // Find user using Knex - no need to get role from users table anymore
     const user = await knex('users')
       .leftJoin('companies', 'users.company_id', 'companies.id')
       .select('users.*', 'companies.name as company_name')
@@ -55,7 +55,14 @@ async function login(req, res) {
     }
 
     // Generate JWT token
-    const token = generateToken(user);
+    const roles = await getUserRoles(user.id);
+    const token = generateToken({
+      id: user.id,
+      username: user.username,
+      user_type: user.user_type,
+      roles: roles,
+      company_id: user.company_id
+    });
     
     // Return success response with token and user info
     res.json({
@@ -63,7 +70,8 @@ async function login(req, res) {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        user_type: user.user_type,
+        roles: roles,
         company_id: user.company_id,
         company_name: user.company_name
       }

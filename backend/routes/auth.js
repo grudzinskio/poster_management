@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const { authenticateToken, authorizePermission } = require('../middleware/auth');
 const { login, migratePasswords } = require('../controllers/authController');
 
 /**
@@ -15,10 +15,10 @@ router.post('/login', login);
 
 /**
  * POST /api/migrate-passwords - Migrate plaintext passwords to hashed passwords
- * Requires: Authentication + Employee role
+ * Requires: Authentication + Employee role (legacy, keeping for compatibility)
  * Note: This is a one-time migration utility for existing users
  * WARNING: Only run this once on production data
  */
-router.post('/migrate-passwords', authenticateToken, authorizeRole('employee'), migratePasswords);
+router.post('/migrate-passwords', authenticateToken, authorizePermission('migratePasswords'), migratePasswords);
 
 module.exports = router;

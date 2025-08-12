@@ -9,11 +9,15 @@ const authRoutes = require('./auth');
 const companyRoutes = require('./companies');
 const userRoutes = require('./users');
 const campaignRoutes = require('./campaigns');
+const roleRoutes = require('./roles');
+const permissionRoutes = require('./permissions');
 
 // Mount routes with appropriate prefixes
 router.use('/api', authRoutes);           // Auth routes: /api/login, /api/migrate-passwords
 router.use('/api/companies', companyRoutes);  // Company routes: /api/companies/*
 router.use('/api/users', userRoutes);         // User routes: /api/users/*
 router.use('/api/campaigns', campaignRoutes); // Campaign routes: /api/campaigns/*
+router.use('/api/roles', roleRoutes);         // Role routes: /api/roles/*
+router.use('/api/permissions', permissionRoutes); // Permission routes: /api/permissions/*
 
 module.exports = router;

@@ -15,7 +15,7 @@ function UserManagement({ token }) {
   const [newUser, setNewUser] = useState({ 
     username: '', 
     password: '', 
-    role: 'client',
+    roles: ['client'],
     company_id: ''
   });
 
@@ -49,7 +49,13 @@ function UserManagement({ token }) {
   }, [token]);
 
   const handleNewUserChange = (e) => {
-    setNewUser({ ...newUser, [e.target.name]: e.target.value });
+    if (e.target.name === 'roles') {
+      // Handle multi-select for roles
+      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+      setNewUser({ ...newUser, roles: selectedOptions });
+    } else {
+      setNewUser({ ...newUser, [e.target.name]: e.target.value });
+    }
     if (error) setError('');
     if (success) setSuccess('');
   };
@@ -68,7 +74,7 @@ function UserManagement({ token }) {
       setNewUser({ 
         username: '', 
         password: '', 
-        role: 'client',
+        roles: ['client'],
         company_id: ''
       });
       setSuccess('User added successfully!');
@@ -163,12 +169,18 @@ function UserManagement({ token }) {
   const UserRow = ({ user }) => {
     const [editData, setEditData] = useState({
       username: user.username,
-      role: user.role,
+      roles: user.roles || ['client'],
       company_id: user.company_id || ''
     });
 
     const handleEditChange = (e) => {
-      setEditData({ ...editData, [e.target.name]: e.target.value });
+      if (e.target.name === 'roles') {
+        // Handle multi-select for roles
+        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
+        setEditData({ ...editData, roles: selectedOptions });
+      } else {
+        setEditData({ ...editData, [e.target.name]: e.target.value });
+      }
     };
 
     if (editingId === user.id) {
@@ -186,11 +198,19 @@ function UserManagement({ token }) {
             />
           </td>
           <td className="table-cell">
-            <select name="role" value={editData.role} onChange={handleEditChange} className="form-input cursor-pointer">
+            <select 
+              name="roles" 
+              value={editData.roles} 
+              onChange={handleEditChange} 
+              className="form-input cursor-pointer"
+              multiple
+              size="3"
+            >
               <option value="client">Client</option>
               <option value="contractor">Contractor</option>
               <option value="employee">Employee</option>
             </select>
+            <div className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</div>
           </td>
           <td className="table-cell">
             <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="form-input cursor-pointer">
@@ -226,7 +246,7 @@ function UserManagement({ token }) {
       <tr key={user.id} className="hover:bg-gray-50">
         <td className="table-cell">{user.id}</td>
         <td className="table-cell">{user.username}</td>
-        <td className="table-cell">{user.role}</td>
+        <td className="table-cell">{user.roles ? user.roles.join(', ') : 'No roles'}</td>
         <td className="table-cell">{user.company_name || 'No Company'}</td>
         <td className="table-cell">
           <div className="flex gap-2 flex-wrap">
@@ -302,7 +322,7 @@ function UserManagement({ token }) {
       
       <form onSubmit={handleAddUser} className="bg-gray-50 p-6 mb-8 border border-gray-300">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New User</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input
             type="text"
             name="username"
@@ -321,11 +341,23 @@ function UserManagement({ token }) {
             required
             className="form-input"
           />
-          <select name="role" value={newUser.role} onChange={handleNewUserChange} className="form-input cursor-pointer">
-            <option value="client">Client</option>
-            <option value="contractor">Contractor</option>
-            <option value="employee">Employee</option>
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Roles *</label>
+            <select 
+              name="roles" 
+              value={newUser.roles} 
+              onChange={handleNewUserChange} 
+              className="form-input cursor-pointer"
+              multiple
+              size="3"
+              required
+            >
+              <option value="client">Client</option>
+              <option value="contractor">Contractor</option>
+              <option value="employee">Employee</option>
+            </select>
+            <div className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</div>
+          </div>
           <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
             <option value="">No Company</option>
             {companies.map(company => (

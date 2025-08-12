@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizeRole } = require('../middleware/auth');
+const { authenticateToken, authorizeRole, authorizePermission } = require('../middleware/auth');
 const { 
   getAllCampaigns, 
   getCompletedCampaigns,
@@ -18,7 +18,7 @@ const {
 /**
  * GET /api/campaigns - Retrieve campaigns based on user role
  */
-router.get('/', authenticateToken, getAllCampaigns);
+router.get('/', authenticateToken, authorizePermission('view_campaign_list'), getAllCampaigns);
 
 /**
  * GET /api/campaigns/contractor - Get campaigns assigned to contractor
@@ -33,22 +33,22 @@ router.get('/completed', authenticateToken, authorizeRole('contractor'), getComp
 /**
  * POST /api/campaigns - Create a new campaign
  */
-router.post('/', authenticateToken, createCampaign);
+router.post('/', authenticateToken, authorizePermission('save_new_campaign'), createCampaign);
 
 /**
  * POST /api/campaigns/:id/assign - Assign contractors to a campaign
  */
-router.post('/:id/assign', authenticateToken, authorizeRole('employee'), assignContractors);
+router.post('/:id/assign', authenticateToken, authorizePermission('assign_contractor_to_campaign'), assignContractors);
 
 /**
  * PUT /api/campaigns/:id - Update campaign details
  */
-router.put('/:id', authenticateToken, authorizeRole('employee'), updateCampaign);
+router.put('/:id', authenticateToken, authorizePermission('update_campaign_data'), updateCampaign);
 
 /**
  * PUT /api/campaigns/:id/status - Update campaign status (employee)
  */
-router.put('/:id/status', authenticateToken, authorizeRole('employee'), updateCampaignStatus);
+router.put('/:id/status', authenticateToken, authorizePermission('update_campaign_data'), updateCampaignStatus);
 
 /**
  * PUT /api/campaigns/:id/contractor-status - Update campaign status (contractor)

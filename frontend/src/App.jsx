@@ -81,7 +81,7 @@ function App() {
         <h1 className="text-3xl font-bold text-gray-900">Poster Campaigns</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">
-            Welcome, {user.username} ({user.role})
+            Welcome, {user.username} ({user.user_type}) - {user.roles ? user.roles.join(', ') : 'No roles'}
             {user.company_name && ` - ${user.company_name}`}
           </span>
           <button onClick={handleLogout} className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500">
@@ -92,8 +92,8 @@ function App() {
 
       <main>
         {/* Employee-Only Navigation Tabs */}
-        {/* Role-Based Access Control: Only employees can manage users and companies */}
-        {user.role === 'employee' && (
+        {/* Role-Based Access Control: Employees and managers can manage users and companies */}
+        {user.user_type === 'employee' && (
           <div className="flex gap-4 mb-8 border-b border-gray-200">
             <button 
               className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
@@ -130,15 +130,15 @@ function App() {
 
         {/* Employee Management Interfaces */}
         {/* Each component handles its own API communication using the shared JWT token */}
-        {user.role === 'employee' && activeTab === 'users' && <UserManagement token={token} />}
-        {user.role === 'employee' && activeTab === 'companies' && <CompanyManagement token={token} />}
-        {user.role === 'employee' && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
+        {user.user_type === 'employee' && activeTab === 'users' && <UserManagement token={token} />}
+        {user.user_type === 'employee' && activeTab === 'companies' && <CompanyManagement token={token} />}
+        {user.user_type === 'employee' && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
         
         {/* Client Interface */}
-        {user.role === 'client' && <ClientCampaignManagement token={token} user={user} />}
+        {user.user_type === 'client' && <ClientCampaignManagement token={token} user={user} />}
         
         {/* Contractor Interface */}
-        {user.role === 'contractor' && <ContractorCampaignManagement token={token} user={user} />}
+        {user.user_type === 'contractor' && <ContractorCampaignManagement token={token} user={user} />}
       </main>
     </div>
   );

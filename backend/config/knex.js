@@ -1,5 +1,5 @@
 // Load environment variables from parent directory
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 
 const knex = require('knex');
 
@@ -26,10 +26,10 @@ const knexConfig = {
   },
   migrations: {
     tableName: 'knex_migrations',
-    directory: './migrations'
+    directory: require('path').resolve(__dirname, '../migrations')
   },
   seeds: {
-    directory: './seeds'
+    directory: require('path').resolve(__dirname, '../seeds')
   }
 };
 

@@ -1,9 +1,11 @@
 // middleware/index.js
 // Export all middleware functions
 
-const { authenticateToken, authorizeRole } = require('./auth');
+const { authenticateToken, authorizeRole, authorizePermission, authorizeAnyRole } = require('./auth');
 
 module.exports = {
   authenticateToken,
-  authorizeRole
+  authorizeRole,
+  authorizePermission,
+  authorizeAnyRole
 };
