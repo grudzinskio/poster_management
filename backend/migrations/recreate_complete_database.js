@@ -66,28 +66,28 @@ exports.up = async function(knex) {
 
   // Create user_roles table
   await knex.schema.createTable('user_roles', (table) => {
-    table.increments('id').unsigned().primary();
     table.integer('user').unsigned().notNullable();
     table.integer('role').unsigned().notNullable();
     
     // Foreign key constraints
     table.foreign('user').references('id').inTable('users').onDelete('CASCADE');
     table.foreign('role').references('id').inTable('roles').onDelete('CASCADE');
-    table.index('user');
-    table.index('role');
+    
+    // Composite primary key prevents duplicates
+    table.primary(['user', 'role']);
   });
 
   // Create role_permissions table
   await knex.schema.createTable('role_permissions', (table) => {
-    table.increments('id').unsigned().primary();
     table.integer('role').unsigned().notNullable();
     table.integer('permission').unsigned().notNullable();
     
     // Foreign key constraints
     table.foreign('role').references('id').inTable('roles').onDelete('CASCADE');
     table.foreign('permission').references('id').inTable('permissions').onDelete('CASCADE');
-    table.index('role');
-    table.index('permission');
+    
+    // Composite primary key prevents duplicates
+    table.primary(['role', 'permission']);
   });
 
   // Create campaign_assignments table
