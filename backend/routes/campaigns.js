@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizeRole, authorizePermission } = require('../middleware/auth');
+const { authenticateToken, requireRole, requirePermission } = require('../middleware/enhancedAuth');
 const { 
   getAllCampaigns, 
   getCompletedCampaigns,
@@ -18,41 +18,41 @@ const {
 /**
  * GET /api/campaigns - Retrieve campaigns based on user role
  */
-router.get('/', authenticateToken, authorizePermission('view_campaign_list'), getAllCampaigns);
+router.get('/', authenticateToken, requirePermission('view_campaigns'), getAllCampaigns);
 
 /**
  * GET /api/campaigns/contractor - Get campaigns assigned to contractor
  */
-router.get('/contractor', authenticateToken, authorizeRole('contractor'), getContractorCampaigns);
+router.get('/contractor', authenticateToken, requireRole('contractor'), getContractorCampaigns);
 
 /**
  * GET /api/campaigns/completed - Get completed campaigns for contractors
  */
-router.get('/completed', authenticateToken, authorizeRole('contractor'), getCompletedCampaigns);
+router.get('/completed', authenticateToken, requireRole('contractor'), getCompletedCampaigns);
 
 /**
  * POST /api/campaigns - Create a new campaign
  */
-router.post('/', authenticateToken, authorizePermission('save_new_campaign'), createCampaign);
+router.post('/', authenticateToken, requirePermission('create_campaign'), createCampaign);
 
 /**
  * POST /api/campaigns/:id/assign - Assign contractors to a campaign
  */
-router.post('/:id/assign', authenticateToken, authorizePermission('assign_contractor_to_campaign'), assignContractors);
+router.post('/:id/assign', authenticateToken, requirePermission('assign_campaign'), assignContractors);
 
 /**
  * PUT /api/campaigns/:id - Update campaign details
  */
-router.put('/:id', authenticateToken, authorizePermission('update_campaign_data'), updateCampaign);
+router.put('/:id', authenticateToken, requirePermission('edit_campaign'), updateCampaign);
 
 /**
  * PUT /api/campaigns/:id/status - Update campaign status (employee)
  */
-router.put('/:id/status', authenticateToken, authorizePermission('update_campaign_data'), updateCampaignStatus);
+router.put('/:id/status', authenticateToken, requirePermission('edit_campaign'), updateCampaignStatus);
 
 /**
  * PUT /api/campaigns/:id/contractor-status - Update campaign status (contractor)
  */
-router.put('/:id/contractor-status', authenticateToken, authorizeRole('contractor'), updateCampaignStatusByContractor);
+router.put('/:id/contractor-status', authenticateToken, requireRole('contractor'), updateCampaignStatusByContractor);
 
 module.exports = router;

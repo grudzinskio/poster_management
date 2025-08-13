@@ -60,18 +60,16 @@ function verifyToken(token) {
 /**
  * Get user permissions based on their roles
  * @param {number} userId - User ID
- * @returns {Promise<Array>} - Array of permission function names
+ * @returns {Promise<Array>} - Array of permission objects
  */
 async function getUserPermissions(userId) {
   try {
     const permissions = await knex('user_roles as ur')
-      .join('role_permissions as rp', 'ur.role_name', 'rp.role_name')
-      .join('permission_functions as pf', 'rp.permission_name', 'pf.permission_name')
-      .where('ur.user_id', userId)
-      .where('ur.is_active', true)
-      .where('rp.is_active', true)
-      .where('pf.is_active', true)
-      .select('pf.function_name', 'rp.permission_name', 'pf.module', 'pf.description')
+      .join('roles as r', 'ur.role', 'r.id')
+      .join('role_permissions as rp', 'r.id', 'rp.role')
+      .join('permissions as p', 'rp.permission', 'p.id')
+      .where('ur.user', userId)
+      .select('p.permission', 'p.description', 'r.name as role_name')
       .distinct();
 
     return permissions;
@@ -84,17 +82,17 @@ async function getUserPermissions(userId) {
 /**
  * Get user roles
  * @param {number} userId - User ID
- * @returns {Promise<Array>} - Array of role names
+ * @returns {Promise<Array>} - Array of role objects
  */
 async function getUserRoles(userId) {
   try {
-    const roles = await knex('user_roles')
-      .where('user_id', userId)
-      .where('is_active', true)
-      .select('role_name')
+    const roles = await knex('user_roles as ur')
+      .join('roles as r', 'ur.role', 'r.id')
+      .where('ur.user', userId)
+      .select('r.id', 'r.name', 'r.description')
       .distinct();
 
-    return roles.map(role => role.role_name);
+    return roles;
   } catch (error) {
     console.error('Error fetching user roles:', error);
     return [];
@@ -102,21 +100,19 @@ async function getUserRoles(userId) {
 }
 
 /**
- * Check if user has specific permission
+ * Check if user has specific permission (can method)
  * @param {number} userId - User ID
- * @param {string} functionName - Permission function name
+ * @param {string} permissionName - Permission name (e.g., 'edit_user')
  * @returns {Promise<boolean>} - True if user has permission
  */
-async function hasPermission(userId, functionName) {
+async function can(userId, permissionName) {
   try {
     const permission = await knex('user_roles as ur')
-      .join('role_permissions as rp', 'ur.role_name', 'rp.role_name')
-      .join('permission_functions as pf', 'rp.permission_name', 'pf.permission_name')
-      .where('ur.user_id', userId)
-      .where('pf.function_name', functionName)
-      .where('ur.is_active', true)
-      .where('rp.is_active', true)
-      .where('pf.is_active', true)
+      .join('roles as r', 'ur.role', 'r.id')
+      .join('role_permissions as rp', 'r.id', 'rp.role')
+      .join('permissions as p', 'rp.permission', 'p.id')
+      .where('ur.user', userId)
+      .where('p.permission', permissionName)
       .first();
 
     return !!permission;
@@ -127,6 +123,16 @@ async function hasPermission(userId, functionName) {
 }
 
 /**
+ * Check if user has specific permission (alias for can method)
+ * @param {number} userId - User ID
+ * @param {string} permissionName - Permission name
+ * @returns {Promise<boolean>} - True if user has permission
+ */
+async function hasPermission(userId, permissionName) {
+  return await can(userId, permissionName);
+}
+
+/**
  * Check if user has specific role
  * @param {number} userId - User ID
  * @param {string} roleName - Role name
@@ -134,10 +140,10 @@ async function hasPermission(userId, functionName) {
  */
 async function hasRole(userId, roleName) {
   try {
-    const role = await knex('user_roles')
-      .where('user_id', userId)
-      .where('role_name', roleName)
-      .where('is_active', true)
+    const role = await knex('user_roles as ur')
+      .join('roles as r', 'ur.role', 'r.id')
+      .where('ur.user', userId)
+      .where('r.name', roleName)
       .first();
 
     return !!role;
@@ -155,6 +161,7 @@ module.exports = {
   verifyToken,
   getUserPermissions,
   getUserRoles,
+  can,
   hasPermission,
   hasRole
 };

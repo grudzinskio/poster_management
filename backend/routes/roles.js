@@ -4,7 +4,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizePermission } = require('../middleware/auth');
+const { authenticateToken, requirePermission } = require('../middleware/enhancedAuth');
 const { 
   getAllRoles, 
   getRolePermissions, 
@@ -15,35 +15,35 @@ const {
 
 /**
  * GET /api/roles - Retrieve all roles
- * Requires: Authentication + permission to read roles
+ * Requires: Authentication + manage_roles permission
  */
-router.get('/', authenticateToken, authorizePermission('getAllRoles'), getAllRoles);
+router.get('/', authenticateToken, requirePermission('manage_roles'), getAllRoles);
 
 /**
  * GET /api/roles/:roleName/permissions - Retrieve permissions for a specific role
- * Requires: Authentication + permission to read roles
+ * Requires: Authentication + manage_roles permission
  * Note: Now uses roleName (string) instead of id
  */
-router.get('/:roleName/permissions', authenticateToken, authorizePermission('getAllRoles'), getRolePermissions);
+router.get('/:roleName/permissions', authenticateToken, requirePermission('manage_roles'), getRolePermissions);
 
 /**
  * POST /api/roles - Create a new role
- * Requires: Authentication + permission to create roles
+ * Requires: Authentication + manage_roles permission
  */
-router.post('/', authenticateToken, authorizePermission('createRole'), createRole);
+router.post('/', authenticateToken, requirePermission('manage_roles'), createRole);
 
 /**
  * PUT /api/roles/:roleName/permissions - Update role permissions
- * Requires: Authentication + permission to update roles
+ * Requires: Authentication + manage_roles permission
  * Note: Now uses roleName (string) instead of id
  */
-router.put('/:roleName/permissions', authenticateToken, authorizePermission('updateRole'), updateRolePermissions);
+router.put('/:roleName/permissions', authenticateToken, requirePermission('manage_roles'), updateRolePermissions);
 
 /**
  * DELETE /api/roles/:roleName - Delete a role
- * Requires: Authentication + permission to delete roles
+ * Requires: Authentication + manage_roles permission
  * Note: Now uses roleName (string) instead of id
  */
-router.delete('/:roleName', authenticateToken, authorizePermission('deleteRole'), deleteRole);
+router.delete('/:roleName', authenticateToken, requirePermission('manage_roles'), deleteRole);
 
 module.exports = router;

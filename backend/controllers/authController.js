@@ -2,7 +2,8 @@
 // Authentication controller handling login logic
 
 const knex = require('../config/knex');
-const { hashPassword, comparePassword, isPasswordHashed, generateToken, getUserRoles } = require('../services/authService');
+const { hashPassword, comparePassword, isPasswordHashed, generateToken, getUserRoles, can } = require('../services/authService');
+const { getUserByUsername } = require('../services/userService');
 
 /**
  * User login controller
@@ -18,27 +19,28 @@ async function login(req, res) {
   }
 
   try {
-    // Find user using Knex - no need to get role from users table anymore
-    const user = await knex('users')
-      .leftJoin('companies', 'users.company_id', 'companies.id')
-      .select('users.*', 'companies.name as company_name')
-      .where('users.username', username)
-      .first();
+    // Find user using the new User service
+    const user = await getUserByUsername(username);
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
+    // Get raw user data for password checking
+    const rawUserData = await knex('users')
+      .where('username', username)
+      .first();
+
     // Password verification - handle both plaintext and hashed passwords
     let isValidPassword = false;
     
     // Check if password is already hashed
-    if (isPasswordHashed(user.password)) {
+    if (isPasswordHashed(rawUserData.password)) {
       // It's a bcrypt hash, use bcrypt.compare
-      isValidPassword = await comparePassword(password, user.password);
+      isValidPassword = await comparePassword(password, rawUserData.password);
     } else {
       // It's plaintext, do direct comparison
-      isValidPassword = (password === user.password);
+      isValidPassword = (password === rawUserData.password);
       
       // Auto-migrate this password to hashed format
       if (isValidPassword) {
@@ -59,7 +61,6 @@ async function login(req, res) {
     const token = generateToken({
       id: user.id,
       username: user.username,
-      user_type: user.user_type,
       roles: roles,
       company_id: user.company_id
     });
@@ -68,12 +69,8 @@ async function login(req, res) {
     res.json({
       token,
       user: {
-        id: user.id,
-        username: user.username,
-        user_type: user.user_type,
-        roles: roles,
-        company_id: user.company_id,
-        company_name: user.company_name
+        ...user.toJSON(),
+        roles: roles
       }
     });
   } catch (error) {
@@ -115,7 +112,38 @@ async function migratePasswords(req, res) {
   }
 }
 
+/**
+ * Check user permission
+ * POST /api/check-permission
+ * Checks if the authenticated user has a specific permission
+ */
+async function checkPermission(req, res) {
+  const { permission } = req.body;
+  const userId = req.user?.id;
+  
+  if (!permission) {
+    return res.status(400).json({ error: 'Permission name is required' });
+  }
+
+  if (!userId) {
+    return res.status(401).json({ error: 'User not authenticated' });
+  }
+
+  try {
+    const hasPermission = await can(userId, permission);
+    
+    res.json({
+      permission,
+      allowed: hasPermission
+    });
+  } catch (error) {
+    console.error('Error checking permission:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 module.exports = {
   login,
-  migratePasswords
+  migratePasswords,
+  checkPermission
 };

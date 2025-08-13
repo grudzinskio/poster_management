@@ -14,20 +14,25 @@ async function getAllCampaigns(req, res) {
   try {
     let query = knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
-      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
-      .orderBy('c.created_at', 'desc');
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'co.name as company_name')
+      .orderBy('c.id', 'desc');
 
-    if (req.user.role === 'client') {
+    // Check user roles for filtering
+    const userRoles = req.user.roles || [];
+    const hasClientRole = userRoles.some(role => role.name === 'client' || role === 'client');
+    const hasContractorRole = userRoles.some(role => role.name === 'contractor' || role === 'contractor');
+
+    if (hasClientRole) {
       // Role-based query: Clients can only see campaigns for their company
       query = query.where('c.company_id', req.user.company_id);
-    } else if (req.user.role === 'contractor') {
+    } else if (hasContractorRole) {
       // Contractors only see campaigns assigned to them that are in progress
       query = query
         .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
         .where('ca.contractor_id', req.user.id)
         .whereIn('c.status', ['approved', 'in_progress']);
     }
-    // Employees can see all campaigns (no additional filtering)
+    // Employees, admins can see all campaigns (no additional filtering)
 
     const rows = await query;
     res.json(rows);
@@ -42,7 +47,11 @@ async function getAllCampaigns(req, res) {
  * Only contractors can access this endpoint to see their completed work
  */
 async function getCompletedCampaigns(req, res) {
-  if (req.user.role !== 'contractor') {
+  // Check if user has contractor role
+  const userRoles = req.user.roles || [];
+  const hasContractorRole = userRoles.some(role => role.name === 'contractor' || role === 'contractor');
+  
+  if (!hasContractorRole) {
     return res.status(403).json({ error: 'Only contractors can view completed campaigns' });
   }
 
@@ -50,18 +59,12 @@ async function getCompletedCampaigns(req, res) {
     const rows = await knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
       .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
-      .leftJoin('campaign_images as ci', function() {
-        this.on('c.id', 'ci.campaign_id').andOn('ci.uploaded_by', knex.raw('?', [req.user.id]));
-      })
       .select(
-        'c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name',
-        knex.raw('COUNT(ci.id) as total_images'),
-        knex.raw("COUNT(CASE WHEN ci.status = 'approved' THEN 1 END) as approved_images")
+        'c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'co.name as company_name'
       )
       .where('ca.contractor_id', req.user.id)
       .where('c.status', 'completed')
-      .groupBy('c.id')
-      .orderBy('c.created_at', 'desc');
+      .orderBy('c.id', 'desc');
 
     res.json(rows);
   } catch (error) {
@@ -84,14 +87,10 @@ async function createCampaign(req, res) {
     return res.status(400).json({ error: 'Campaign name and description are required' });
   }
   
-  // Only clients and employees can create campaigns
-  if (req.user.role !== 'client' && req.user.role !== 'employee') {
-    return res.status(403).json({ error: 'Not authorized to create campaigns' });
-  }
-  
   try {
-    // Role-based company assignment
-    const company_id = req.user.role === 'client' ? req.user.company_id : req.body.company_id;
+    // Determine company_id based on user's company or request body
+    // If user has a company, use it; otherwise, require company_id in request
+    const company_id = req.user.company_id || req.body.company_id;
     
     if (!company_id) {
       return res.status(400).json({ error: 'Company ID is required' });
@@ -111,7 +110,7 @@ async function createCampaign(req, res) {
     // Retrieve the created campaign with company information
     const campaign = await knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
-      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'co.name as company_name')
       .where('c.id', insertId)
       .first();
     
@@ -164,7 +163,7 @@ async function updateCampaign(req, res) {
     // Retrieve the updated campaign with company information
     const campaign = await knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
-      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'c.company_id', 'co.name as company_name')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.company_id', 'co.name as company_name')
       .where('c.id', id)
       .first();
     
@@ -202,7 +201,7 @@ async function updateCampaignStatus(req, res) {
     // Retrieve the updated campaign with company information
     const campaign = await knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
-      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'co.name as company_name')
       .where('c.id', id)
       .first();
     
@@ -297,7 +296,7 @@ async function updateCampaignStatusByContractor(req, res) {
     // Retrieve the updated campaign with company information
     const campaign = await knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
-      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'co.name as company_name')
       .where('c.id', id)
       .first();
     
@@ -311,8 +310,11 @@ async function updateCampaignStatusByContractor(req, res) {
 // Get campaigns assigned to the current contractor
 const getContractorCampaigns = async (req, res) => {
   try {
-    // Ensure user is a contractor
-    if (req.user.role !== 'contractor') {
+    // Check if user has contractor role
+    const userRoles = req.user.roles || [];
+    const hasContractorRole = userRoles.some(role => role.name === 'contractor' || role === 'contractor');
+    
+    if (!hasContractorRole) {
       return res.status(403).json({ error: 'Access denied. Contractor role required.' });
     }
 
@@ -320,9 +322,9 @@ const getContractorCampaigns = async (req, res) => {
     const campaigns = await knex('campaigns as c')
       .leftJoin('companies as co', 'c.company_id', 'co.id')
       .join('campaign_assignments as ca', 'c.id', 'ca.campaign_id')
-      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.created_at', 'co.name as company_name')
+      .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'co.name as company_name')
       .where('ca.contractor_id', req.user.id)
-      .orderBy('c.created_at', 'desc');
+      .orderBy('c.id', 'desc');
 
     res.json(campaigns);
   } catch (error) {

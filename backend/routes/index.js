@@ -11,9 +11,11 @@ const userRoutes = require('./users');
 const campaignRoutes = require('./campaigns');
 const roleRoutes = require('./roles');
 const permissionRoutes = require('./permissions');
+const rbacRoutes = require('./rbac');
 
 // Mount routes with appropriate prefixes
 router.use('/api', authRoutes);           // Auth routes: /api/login, /api/migrate-passwords
+router.use('/api/rbac', rbacRoutes);      // RBAC demo routes: /api/rbac/*
 router.use('/api/companies', companyRoutes);  // Company routes: /api/companies/*
 router.use('/api/users', userRoutes);         // User routes: /api/users/*
 router.use('/api/campaigns', campaignRoutes); // Campaign routes: /api/campaigns/*

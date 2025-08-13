@@ -3,13 +3,13 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, authorizePermission } = require('../middleware/auth');
+const { authenticateToken, requirePermission } = require('../middleware/enhancedAuth');
 const { getAllPermissions } = require('../controllers/roleController');
 
 /**
  * GET /api/permissions - Retrieve all permissions
- * Requires: Authentication + permission to read permissions
+ * Requires: Authentication + manage_roles permission
  */
-router.get('/', authenticateToken, authorizePermission('getAllPermissions'), getAllPermissions);
+router.get('/', authenticateToken, requirePermission('manage_roles'), getAllPermissions);
 
 module.exports = router;

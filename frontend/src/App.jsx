@@ -54,6 +54,20 @@ function App() {
     setShowLogin(false);
   };
 
+  // Helper function to check if user has a specific role
+  const hasRole = (roleName) => {
+    return user && user.roles && user.roles.some(role => 
+      typeof role === 'string' ? role === roleName : role.name === roleName
+    );
+  };
+
+  // Helper function to get role names as string
+  const getRoleNames = () => {
+    if (!user || !user.roles) return 'No roles';
+    return user.roles.map(role => 
+      typeof role === 'string' ? role : role.name
+    ).join(', ');
+  };
   /**
    * Event Handler: User Logout
    * 
@@ -81,7 +95,7 @@ function App() {
         <h1 className="text-3xl font-bold text-gray-900">Poster Campaigns</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">
-            Welcome, {user.username} ({user.user_type}) - {user.roles ? user.roles.join(', ') : 'No roles'}
+            Welcome, {user.username} ({user.user_type || 'unknown'}) - {getRoleNames()}
             {user.company_name && ` - ${user.company_name}`}
           </span>
           <button onClick={handleLogout} className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500">
@@ -91,9 +105,9 @@ function App() {
       </header>
 
       <main>
-        {/* Employee-Only Navigation Tabs */}
-        {/* Role-Based Access Control: Employees and managers can manage users and companies */}
-        {user.user_type === 'employee' && (
+        {/* Admin/Employee Navigation Tabs */}
+        {/* Role-Based Access Control: Admins and employees can manage users and companies */}
+        {(hasRole('super_admin') || hasRole('company_admin') || hasRole('employee')) && (
           <div className="flex gap-4 mb-8 border-b border-gray-200">
             <button 
               className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
@@ -105,40 +119,46 @@ function App() {
             >
               Campaigns
             </button>
-            <button 
-              className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                activeTab === 'users' 
-                  ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setActiveTab('users')}
-            >
-              User Management
-            </button>
-            <button 
-              className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
-                activeTab === 'companies' 
-                  ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                  : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
-              }`}
-              onClick={() => setActiveTab('companies')}
-            >
-              Company Management
-            </button>
+            {/* Show user management for admins and employees with proper permissions */}
+            {(hasRole('super_admin') || hasRole('company_admin')) && (
+              <button 
+                className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === 'users' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+                onClick={() => setActiveTab('users')}
+              >
+                User Management
+              </button>
+            )}
+            {/* Show company management for super admins only */}
+            {hasRole('super_admin') && (
+              <button 
+                className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                  activeTab === 'companies' 
+                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                    : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+                onClick={() => setActiveTab('companies')}
+              >
+                Company Management
+              </button>
+            )}
           </div>
         )}
 
-        {/* Employee Management Interfaces */}
+        {/* Management Interfaces Based on Roles */}
         {/* Each component handles its own API communication using the shared JWT token */}
-        {user.user_type === 'employee' && activeTab === 'users' && <UserManagement token={token} />}
-        {user.user_type === 'employee' && activeTab === 'companies' && <CompanyManagement token={token} />}
-        {user.user_type === 'employee' && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
+        {(hasRole('super_admin') || hasRole('company_admin')) && activeTab === 'users' && <UserManagement token={token} />}
+        {hasRole('super_admin') && activeTab === 'companies' && <CompanyManagement token={token} />}
+        {(hasRole('super_admin') || hasRole('company_admin') || hasRole('employee')) && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
         
         {/* Client Interface */}
-        {user.user_type === 'client' && <ClientCampaignManagement token={token} user={user} />}
+        {hasRole('client') && <ClientCampaignManagement token={token} user={user} />}
         
         {/* Contractor Interface */}
-        {user.user_type === 'contractor' && <ContractorCampaignManagement token={token} user={user} />}
+        {hasRole('contractor') && <ContractorCampaignManagement token={token} user={user} />}
       </main>
     </div>
   );

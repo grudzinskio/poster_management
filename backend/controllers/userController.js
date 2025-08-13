@@ -14,7 +14,7 @@ async function getAllUsers(req, res) {
     // Get all users with their company information
     let userQuery = knex('users as u')
       .leftJoin('companies as c', 'u.company_id', 'c.id')
-      .select('u.id', 'u.username', 'u.company_id', 'c.name as company_name')
+      .select('u.id', 'u.username', 'u.user_type', 'u.company_id', 'c.name as company_name')
       .orderBy('u.id', 'desc');
     
     const users = await userQuery;
@@ -22,9 +22,11 @@ async function getAllUsers(req, res) {
     // Get roles for each user
     const usersWithRoles = await Promise.all(users.map(async (user) => {
       const roles = await getUserRoles(user.id);
+      const roleNames = roles.map(r => r.name);
+      
       return {
         ...user,
-        roles: roles
+        roles: roleNames
       };
     }));
     
@@ -43,13 +45,18 @@ async function getAllUsers(req, res) {
 
 /**
  * POST /api/users - Create a new user with role assignment
- * Body: { username, password, roles: [string], company_id? }
+ * Body: { username, password, user_type, roles: [string], company_id? }
  * Note: Passwords are securely hashed using bcrypt before storage
  */
 async function createUser(req, res) {
-  const { username, password, roles, company_id } = req.body;
-  if (!username || !password || !roles || !Array.isArray(roles) || roles.length === 0) {
-    return res.status(400).json({ error: 'Username, password, and at least one role are required' });
+  const { username, password, user_type, roles, company_id } = req.body;
+  if (!username || !password || !user_type || !roles || !Array.isArray(roles) || roles.length === 0) {
+    return res.status(400).json({ error: 'Username, password, user_type, and at least one role are required' });
+  }
+  
+  // Validate user_type
+  if (!['employee', 'client', 'contractor'].includes(user_type)) {
+    return res.status(400).json({ error: 'user_type must be one of: employee, client, contractor' });
   }
   
   const trx = await knex.transaction();
@@ -62,13 +69,13 @@ async function createUser(req, res) {
     const [insertId] = await trx('users').insert({
       username,
       password: hashedPassword,
+      user_type,
       company_id: company_id || null
     });
     
     // Get role IDs for the provided role names
     const roleRecords = await trx('roles')
       .whereIn('name', roles)
-      .where('is_active', true)
       .select('id', 'name');
     
     if (roleRecords.length !== roles.length) {
@@ -78,8 +85,8 @@ async function createUser(req, res) {
     
     // Assign roles to user
     const userRoleInserts = roleRecords.map(role => ({
-      user_id: insertId,
-      role_id: role.id
+      user: insertId,
+      role: role.id
     }));
     
     await trx('user_roles').insert(userRoleInserts);
@@ -87,7 +94,7 @@ async function createUser(req, res) {
     // Retrieve the created user with company information
     const user = await trx('users as u')
       .leftJoin('companies as c', 'u.company_id', 'c.id')
-      .select('u.id', 'u.username', 'u.company_id', 'c.name as company_name')
+      .select('u.id', 'u.username', 'u.user_type', 'u.company_id', 'c.name as company_name')
       .where('u.id', insertId)
       .first();
     
@@ -109,14 +116,19 @@ async function createUser(req, res) {
 /**
  * PUT /api/users/:id - Update user information, company assignment, and roles
  * Params: id (user ID)
- * Body: { username, roles: [string], company_id? }
+ * Body: { username, user_type, roles: [string], company_id? }
  */
 async function updateUser(req, res) {
   const { id } = req.params;
-  const { username, roles, company_id } = req.body;
+  const { username, user_type, roles, company_id } = req.body;
   
-  if (!username || !roles || !Array.isArray(roles) || roles.length === 0) {
-    return res.status(400).json({ error: 'Username and at least one role are required' });
+  if (!username || !user_type || !roles || !Array.isArray(roles) || roles.length === 0) {
+    return res.status(400).json({ error: 'Username, user_type, and at least one role are required' });
+  }
+  
+  // Validate user_type
+  if (!['employee', 'client', 'contractor'].includes(user_type)) {
+    return res.status(400).json({ error: 'user_type must be one of: employee, client, contractor' });
   }
   
   const trx = await knex.transaction();
@@ -127,6 +139,7 @@ async function updateUser(req, res) {
       .where('id', id)
       .update({
         username,
+        user_type,
         company_id: company_id || null
       });
     
@@ -138,7 +151,6 @@ async function updateUser(req, res) {
     // Get role IDs for the provided role names
     const roleRecords = await trx('roles')
       .whereIn('name', roles)
-      .where('is_active', true)
       .select('id', 'name');
     
     if (roleRecords.length !== roles.length) {
@@ -147,12 +159,12 @@ async function updateUser(req, res) {
     }
     
     // Remove existing role assignments
-    await trx('user_roles').where('user_id', id).del();
+    await trx('user_roles').where('user', id).del();
     
     // Assign new roles to user
     const userRoleInserts = roleRecords.map(role => ({
-      user_id: id,
-      role_id: role.id
+      user: id,
+      role: role.id
     }));
     
     await trx('user_roles').insert(userRoleInserts);
@@ -160,7 +172,7 @@ async function updateUser(req, res) {
     // Retrieve the updated user with company information
     const user = await trx('users as u')
       .leftJoin('companies as c', 'u.company_id', 'c.id')
-      .select('u.id', 'u.username', 'u.company_id', 'c.name as company_name')
+      .select('u.id', 'u.username', 'u.user_type', 'u.company_id', 'c.name as company_name')
       .where('u.id', id)
       .first();
     
@@ -229,7 +241,7 @@ async function deleteUser(req, res) {
   
   try {
     // Delete user role assignments first (due to foreign key constraints)
-    await trx('user_roles').where('user_id', id).del();
+    await trx('user_roles').where('user', id).del();
     
     // Delete the user
     const affectedRows = await trx('users')

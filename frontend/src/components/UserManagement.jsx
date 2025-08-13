@@ -6,6 +6,7 @@ import { useApi } from '../hooks/useApi';
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -15,6 +16,7 @@ function UserManagement({ token }) {
   const [newUser, setNewUser] = useState({ 
     username: '', 
     password: '', 
+    user_type: 'client',
     roles: ['client'],
     company_id: ''
   });
@@ -43,9 +45,33 @@ function UserManagement({ token }) {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const data = await get('/roles');
+      setRoles(data);
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+    }
+  };
+
+  // Filter roles based on user type
+  const getRelevantRoles = (userType) => {
+    switch (userType) {
+      case 'employee':
+        return roles.filter(role => ['super_admin', 'company_admin', 'employee'].includes(role.name));
+      case 'client':
+        return roles.filter(role => ['client', 'company_admin'].includes(role.name));
+      case 'contractor':
+        return roles.filter(role => ['contractor'].includes(role.name));
+      default:
+        return roles;
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
     fetchCompanies();
+    fetchRoles();
   }, [token]);
 
   const handleNewUserChange = (e) => {
@@ -53,6 +79,12 @@ function UserManagement({ token }) {
       // Handle multi-select for roles
       const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
       setNewUser({ ...newUser, roles: selectedOptions });
+    } else if (e.target.name === 'user_type') {
+      // When user type changes, reset roles to appropriate default
+      const userType = e.target.value;
+      const relevantRoles = getRelevantRoles(userType);
+      const defaultRole = relevantRoles.length > 0 ? [relevantRoles[0].name] : [];
+      setNewUser({ ...newUser, user_type: userType, roles: defaultRole });
     } else {
       setNewUser({ ...newUser, [e.target.name]: e.target.value });
     }
@@ -74,6 +106,7 @@ function UserManagement({ token }) {
       setNewUser({ 
         username: '', 
         password: '', 
+        user_type: 'client',
         roles: ['client'],
         company_id: ''
       });
@@ -169,6 +202,7 @@ function UserManagement({ token }) {
   const UserRow = ({ user }) => {
     const [editData, setEditData] = useState({
       username: user.username,
+      user_type: user.user_type || 'client',
       roles: user.roles || ['client'],
       company_id: user.company_id || ''
     });
@@ -178,6 +212,12 @@ function UserManagement({ token }) {
         // Handle multi-select for roles
         const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
         setEditData({ ...editData, roles: selectedOptions });
+      } else if (e.target.name === 'user_type') {
+        // When user type changes, reset roles to appropriate default
+        const userType = e.target.value;
+        const relevantRoles = getRelevantRoles(userType);
+        const defaultRole = relevantRoles.length > 0 ? [relevantRoles[0].name] : [];
+        setEditData({ ...editData, user_type: userType, roles: defaultRole });
       } else {
         setEditData({ ...editData, [e.target.name]: e.target.value });
       }
@@ -198,6 +238,13 @@ function UserManagement({ token }) {
             />
           </td>
           <td className="table-cell">
+            <select name="user_type" value={editData.user_type} onChange={handleEditChange} className="form-input cursor-pointer">
+              <option value="employee">Employee</option>
+              <option value="client">Client</option>
+              <option value="contractor">Contractor</option>
+            </select>
+          </td>
+          <td className="table-cell">
             <select 
               name="roles" 
               value={editData.roles} 
@@ -206,14 +253,16 @@ function UserManagement({ token }) {
               multiple
               size="3"
             >
-              <option value="client">Client</option>
-              <option value="contractor">Contractor</option>
-              <option value="employee">Employee</option>
+              {getRelevantRoles(editData.user_type).map(role => (
+                <option key={role.id} value={role.name}>
+                  {role.name} - {role.description}
+                </option>
+              ))}
             </select>
             <div className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</div>
           </td>
           <td className="table-cell">
-            <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="form-input cursor-pointer">
+            <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="form-input cursor-pointer w-full min-w-0">
               <option value="">No Company</option>
               {companies.map(company => (
                 <option key={company.id} value={company.id}>
@@ -246,7 +295,17 @@ function UserManagement({ token }) {
       <tr key={user.id} className="hover:bg-gray-50">
         <td className="table-cell">{user.id}</td>
         <td className="table-cell">{user.username}</td>
-        <td className="table-cell">{user.roles ? user.roles.join(', ') : 'No roles'}</td>
+        <td className="table-cell">
+          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+            user.user_type === 'employee' ? 'bg-blue-100 text-blue-800' :
+            user.user_type === 'client' ? 'bg-green-100 text-green-800' :
+            user.user_type === 'contractor' ? 'bg-orange-100 text-orange-800' :
+            'bg-gray-100 text-gray-800'
+          }`}>
+            {user.user_type || 'unknown'}
+          </span>
+        </td>
+        <td className="table-cell">{user.roles && user.roles.length > 0 ? user.roles.join(', ') : 'No roles'}</td>
         <td className="table-cell">{user.company_name || 'No Company'}</td>
         <td className="table-cell">
           <div className="flex gap-2 flex-wrap">
@@ -322,25 +381,39 @@ function UserManagement({ token }) {
       
       <form onSubmit={handleAddUser} className="bg-gray-50 p-6 mb-8 border border-gray-300">
         <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New User</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <input
-            type="text"
-            name="username"
-            value={newUser.username}
-            onChange={handleNewUserChange}
-            placeholder="Username *"
-            required
-            className="form-input"
-          />
-          <input
-            type="password"
-            name="password"
-            value={newUser.password}
-            onChange={handleNewUserChange}
-            placeholder="Password *"
-            required
-            className="form-input"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+            <input
+              type="text"
+              name="username"
+              value={newUser.username}
+              onChange={handleNewUserChange}
+              placeholder="Username"
+              required
+              className="form-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+            <input
+              type="password"
+              name="password"
+              value={newUser.password}
+              onChange={handleNewUserChange}
+              placeholder="Password"
+              required
+              className="form-input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">User Type *</label>
+            <select name="user_type" value={newUser.user_type} onChange={handleNewUserChange} className="form-input cursor-pointer" required>
+              <option value="employee">Employee</option>
+              <option value="client">Client</option>
+              <option value="contractor">Contractor</option>
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Roles *</label>
             <select 
@@ -352,20 +425,25 @@ function UserManagement({ token }) {
               size="3"
               required
             >
-              <option value="client">Client</option>
-              <option value="contractor">Contractor</option>
-              <option value="employee">Employee</option>
+              {getRelevantRoles(newUser.user_type).map(role => (
+                <option key={role.id} value={role.name}>
+                  {role.name} - {role.description}
+                </option>
+              ))}
             </select>
             <div className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</div>
           </div>
-          <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
-            <option value="">No Company</option>
-            {companies.map(company => (
-              <option key={company.id} value={company.id}>
-                {company.name}
-              </option>
-            ))}
-          </select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+            <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
+              <option value="">No Company</option>
+              {companies.map(company => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
         <button type="submit" className="btn-success">Add User</button>
       </form>
@@ -385,6 +463,7 @@ function UserManagement({ token }) {
               <tr>
                 <th className="table-header">ID</th>
                 <th className="table-header">Username</th>
+                <th className="table-header">User Type</th>
                 <th className="table-header">Role</th>
                 <th className="table-header">Company</th>
                 <th className="table-header">Actions</th>
