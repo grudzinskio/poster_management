@@ -2,13 +2,14 @@
 // Small icon-based component to display user permissions
 
 import React, { useState } from 'react';
-import { useSimplePermissions, getPermissionDisplayName, getCategoryDisplayName } from '../hooks/useSimplePermissions.jsx';
+import { useSimplePermissions, getCategoryDisplayName } from '../hooks/useSimplePermissions.jsx';
 
 function SimplePermissionBox() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { 
     userPermissions, 
     getMissingPermissionsByCategory,
+    getPermissionDisplayName,
     loading, 
     error 
   } = useSimplePermissions();

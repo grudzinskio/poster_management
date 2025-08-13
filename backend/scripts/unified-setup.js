@@ -23,14 +23,14 @@ async function setupDatabase() {
     console.log('👥 Creating roles...');
     const roles = [
       // Employee hierarchy (most powerful to least)
-      { name: 'super_admin' },      // Full system control
-      { name: 'admin_manager' },    // Limited admin controls
-      { name: 'employee' },         // Standard employee
-      { name: 'basic_employee' },   // Read-only employee
+      { name: 'super_admin', description: 'Super Administrator' },      // Full system control
+      { name: 'admin_manager', description: 'Admin Manager' },    // Limited admin controls
+      { name: 'employee', description: 'Employee' },         // Standard employee
+      { name: 'basic_employee', description: 'Basic Employee' },   // Read-only employee
       
       // External roles
-      { name: 'client' },           // Customer role
-      { name: 'contractor' }        // External contractor
+      { name: 'client', description: 'Client' },           // Customer role
+      { name: 'contractor', description: 'Contractor' }        // External contractor
     ];
     await knex('roles').insert(roles);
     console.log(`✅ Created ${roles.length} roles\n`);
@@ -39,36 +39,36 @@ async function setupDatabase() {
     console.log('🔐 Creating permissions...');
     const permissions = [
       // User management
-      { permission: 'view_users' },
-      { permission: 'create_user' },
-      { permission: 'edit_user' },
-      { permission: 'delete_user' },
+      { permission: 'view_users', description: 'View Users' },
+      { permission: 'create_user', description: 'Create Users' },
+      { permission: 'edit_user', description: 'Edit Users' },
+      { permission: 'delete_user', description: 'Delete Users' },
       
       // Company management
-      { permission: 'view_companies' },
-      { permission: 'create_company' },
-      { permission: 'edit_company' },
-      { permission: 'delete_company' },
+      { permission: 'view_companies', description: 'View Companies' },
+      { permission: 'create_company', description: 'Create Companies' },
+      { permission: 'edit_company', description: 'Edit Companies' },
+      { permission: 'delete_company', description: 'Delete Companies' },
       
       // Campaign management
-      { permission: 'view_campaigns' },
-      { permission: 'create_campaign' },
-      { permission: 'edit_campaign' },
-      { permission: 'delete_campaign' },
-      { permission: 'assign_campaign' },
+      { permission: 'view_campaigns', description: 'View Campaigns' },
+      { permission: 'create_campaign', description: 'Create Campaigns' },
+      { permission: 'edit_campaign', description: 'Edit Campaigns' },
+      { permission: 'delete_campaign', description: 'Delete Campaigns' },
+      { permission: 'assign_campaign', description: 'Assign Campaigns' },
       
       // Role & System management
-      { permission: 'manage_roles' },
-      { permission: 'view_roles' },
-      { permission: 'system_admin' },
-      { permission: 'view_reports' },
-      { permission: 'manage_permissions' },
+      { permission: 'manage_roles', description: 'Manage Roles' },
+      { permission: 'view_roles', description: 'View Roles' },
+      { permission: 'system_admin', description: 'System Administration' },
+      { permission: 'view_reports', description: 'View Reports' },
+      { permission: 'manage_permissions', description: 'Manage Permissions' },
       
       // Advanced admin controls
-      { permission: 'database_backup' },
-      { permission: 'system_settings' },
-      { permission: 'audit_logs' },
-      { permission: 'emergency_access' }
+      { permission: 'database_backup', description: 'Database Backup' },
+      { permission: 'system_settings', description: 'System Settings' },
+      { permission: 'audit_logs', description: 'Audit Logs' },
+      { permission: 'emergency_access', description: 'Emergency Access' }
     ];
     await knex('permissions').insert(permissions);
     console.log(`✅ Created ${permissions.length} permissions\n`);

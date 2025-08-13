@@ -114,7 +114,7 @@ function App() {
         <main>
           {/* Admin/Employee Navigation Tabs */}
           {/* Role-Based Access Control: Admins and employees can manage users and companies */}
-          {(hasRole('super_admin') || hasRole('company_admin') || hasRole('employee')) && (
+          {(hasRole('super_admin') || hasRole('admin_manager') || hasRole('employee')) && (
             <div className="flex gap-4 mb-8 border-b border-gray-200">
               <button 
                 className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
@@ -165,7 +165,7 @@ function App() {
           </PermissionGuard>
           
           <PermissionGuard permission="view_campaigns">
-            {(hasRole('super_admin') || hasRole('company_admin') || hasRole('employee')) && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
+            {(hasRole('super_admin') || hasRole('admin_manager') || hasRole('employee')) && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
           </PermissionGuard>
           
           {/* Client Interface */}

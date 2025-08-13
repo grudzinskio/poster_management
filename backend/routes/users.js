@@ -16,7 +16,7 @@ router.get('/me/permissions', authenticateToken, async (req, res) => {
     const user = req.userInstance;
     const permissions = await user.getPermissions();
     
-    // Return simple array of permission names
+    // Return simple array of permission names for compatibility
     const permissionArray = permissions.map(p => p.permission);
     
     res.json(permissionArray);

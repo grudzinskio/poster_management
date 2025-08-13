@@ -22,11 +22,11 @@ async function setupDatabase() {
     // 1. Insert Roles
     console.log('👥 Creating roles...');
     const roles = [
-      { name: 'employee' },
-      { name: 'client' },
-      { name: 'contractor' },
-      { name: 'limited_employee' },
-      { name: 'basic_employee' }
+      { name: 'employee', description: 'Employee' },
+      { name: 'client', description: 'Client' },
+      { name: 'contractor', description: 'Contractor' },
+      { name: 'limited_employee', description: 'Limited Employee' },
+      { name: 'basic_employee', description: 'Basic Employee' }
     ];
     await knex('roles').insert(roles);
     console.log(`✅ Created ${roles.length} roles\n`);
@@ -35,31 +35,31 @@ async function setupDatabase() {
     console.log('🔐 Creating permissions...');
     const permissions = [
       // User management
-      { permission: 'view_users' },
-      { permission: 'create_user' },
-      { permission: 'edit_user' },
-      { permission: 'delete_user' },
+      { permission: 'view_users', description: 'View Users' },
+      { permission: 'create_user', description: 'Create Users' },
+      { permission: 'edit_user', description: 'Edit Users' },
+      { permission: 'delete_user', description: 'Delete Users' },
       
       // Company management
-      { permission: 'view_companies' },
-      { permission: 'create_company' },
-      { permission: 'edit_company' },
-      { permission: 'delete_company' },
+      { permission: 'view_companies', description: 'View Companies' },
+      { permission: 'create_company', description: 'Create Companies' },
+      { permission: 'edit_company', description: 'Edit Companies' },
+      { permission: 'delete_company', description: 'Delete Companies' },
       
       // Campaign management
-      { permission: 'view_campaigns' },
-      { permission: 'create_campaign' },
-      { permission: 'edit_campaign' },
-      { permission: 'delete_campaign' },
-      { permission: 'assign_campaign' },
+      { permission: 'view_campaigns', description: 'View Campaigns' },
+      { permission: 'create_campaign', description: 'Create Campaigns' },
+      { permission: 'edit_campaign', description: 'Edit Campaigns' },
+      { permission: 'delete_campaign', description: 'Delete Campaigns' },
+      { permission: 'assign_campaign', description: 'Assign Campaigns' },
       
       // Role management
-      { permission: 'manage_roles' },
-      { permission: 'view_roles' },
+      { permission: 'manage_roles', description: 'Manage Roles' },
+      { permission: 'view_roles', description: 'View Roles' },
       
       // System
-      { permission: 'system_admin' },
-      { permission: 'view_reports' }
+      { permission: 'system_admin', description: 'System Administration' },
+      { permission: 'view_reports', description: 'View Reports' }
     ];
     await knex('permissions').insert(permissions);
     console.log(`✅ Created ${permissions.length} permissions\n`);

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import { getRoleDisplayName } from '../hooks/useSimplePermissions.jsx';
 import PermissionGuard from './PermissionGuard';
 
 function UserManagement({ token }) {
@@ -52,16 +53,7 @@ function UserManagement({ token }) {
       setRoles(data);
     } catch (err) {
       console.error('Error fetching roles:', err);
-      // Fallback to hardcoded roles if API fails
-      const fallbackRoles = [
-        { id: 1, name: 'super_admin', description: null },
-        { id: 2, name: 'admin_manager', description: null },
-        { id: 3, name: 'employee', description: null },
-        { id: 4, name: 'basic_employee', description: null },
-        { id: 5, name: 'client', description: null },
-        { id: 6, name: 'contractor', description: null }
-      ];
-      setRoles(fallbackRoles);
+      throw new Error('Failed to fetch roles from API. API may not be working correctly.');
     }
   };
 
@@ -266,7 +258,7 @@ function UserManagement({ token }) {
             >
               {getRelevantRoles(editData.user_type).map(role => (
                 <option key={role.id} value={role.name}>
-                  {role.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {getRoleDisplayName(role.name, roles)}
                 </option>
               ))}
             </select>
@@ -440,7 +432,7 @@ function UserManagement({ token }) {
             >
               {getRelevantRoles(newUser.user_type).map(role => (
                 <option key={role.id} value={role.name}>
-                  {role.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  {getRoleDisplayName(role.name, roles)}
                 </option>
               ))}
             </select>

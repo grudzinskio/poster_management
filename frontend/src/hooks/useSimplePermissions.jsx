@@ -58,11 +58,12 @@ export function SimplePermissionsProvider({ children, token }) {
 
       if (response.ok) {
         const permissions = await response.json();
-        setAllPermissions(Array.isArray(permissions) ? permissions.map(p => p.permission || p) : []);
+        // Store the full permission objects with descriptions, but also maintain the simple array for hasPermission checks
+        setAllPermissions(Array.isArray(permissions) ? permissions : []);
       }
     } catch (err) {
       console.error('Error fetching all permissions:', err);
-      // Fallback to user permissions if we can't fetch all permissions
+      // Fallback to empty array if we can't fetch all permissions
       setAllPermissions([]);
     }
   };
@@ -84,7 +85,8 @@ export function SimplePermissionsProvider({ children, token }) {
 
   // Get permissions user doesn't have
   const getMissingPermissions = () => {
-    return allPermissions.filter(permission => !userPermissions.includes(permission));
+    const allPermissionNames = allPermissions.map(p => p.permission || p);
+    return allPermissionNames.filter(permission => !userPermissions.includes(permission));
   };
 
   // Get user permissions grouped by category
@@ -125,7 +127,8 @@ export function SimplePermissionsProvider({ children, token }) {
     getMissingPermissions,
     getPermissionsByCategory,
     getMissingPermissionsByCategory,
-    refetch: fetchPermissions
+    refetch: fetchPermissions,
+    getPermissionDisplayName: (permission) => getPermissionDisplayName(permission, allPermissions)
   };
 
   return (
@@ -144,43 +147,36 @@ export function useSimplePermissions() {
   return context;
 }
 
-// Helper function to get human-readable permission names
-export function getPermissionDisplayName(permission) {
-  const displayNames = {
-    // User management
-    'view_users': 'View Users',
-    'create_user': 'Create Users',
-    'edit_user': 'Edit Users',
-    'delete_user': 'Delete Users',
-    
-    // Company management
-    'view_companies': 'View Companies',
-    'create_company': 'Create Companies',
-    'edit_company': 'Edit Companies',
-    'delete_company': 'Delete Companies',
-    
-    // Campaign management
-    'view_campaigns': 'View Campaigns',
-    'create_campaign': 'Create Campaigns',
-    'edit_campaign': 'Edit Campaigns',
-    'delete_campaign': 'Delete Campaigns',
-    'assign_campaign': 'Assign Campaigns',
-    
-    // Role & System management
-    'manage_roles': 'Manage Roles',
-    'view_roles': 'View Roles',
-    'manage_permissions': 'Manage Permissions',
-    'system_admin': 'System Administration',
-    'view_reports': 'View Reports',
-    
-    // Advanced admin controls
-    'database_backup': 'Database Backup',
-    'system_settings': 'System Settings',
-    'audit_logs': 'Audit Logs',
-    'emergency_access': 'Emergency Access'
-  };
+// Helper function to get human-readable role names
+export function getRoleDisplayName(roleName, allRoles = []) {
+  // Find the role in the database with description
+  const roleObj = allRoles.find(r => r.name === roleName);
   
-  return displayNames[permission] || permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  if (!roleObj) {
+    throw new Error(`Role '${roleName}' not found in database. API may not be working correctly.`);
+  }
+  
+  if (!roleObj.description) {
+    throw new Error(`Role '${roleName}' has no description in database. Database setup may be incomplete.`);
+  }
+  
+  return roleObj.description;
+}
+
+// Helper function to get human-readable permission names
+export function getPermissionDisplayName(permission, allPermissions = []) {
+  // Find the permission in the database with description
+  const permissionObj = allPermissions.find(p => p.permission === permission);
+  
+  if (!permissionObj) {
+    throw new Error(`Permission '${permission}' not found in database. API may not be working correctly.`);
+  }
+  
+  if (!permissionObj.description) {
+    throw new Error(`Permission '${permission}' has no description in database. Database setup may be incomplete.`);
+  }
+  
+  return permissionObj.description;
 }
 
 // Helper function to get category display names
