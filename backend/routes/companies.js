@@ -3,7 +3,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requirePermission } = require('../middleware/enhancedAuth');
+const { authenticateToken } = require('../middleware/enhancedAuth');
+const { requirePermission } = require('../middleware/permissionCheck');
 const { getAllCompanies, createCompany, updateCompany, deleteCompany } = require('../controllers/companyController');
 
 /**

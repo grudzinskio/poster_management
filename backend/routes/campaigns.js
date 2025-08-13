@@ -3,7 +3,8 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requireRole, requirePermission } = require('../middleware/enhancedAuth');
+const { authenticateToken, requireRole } = require('../middleware/enhancedAuth');
+const { requirePermission } = require('../middleware/permissionCheck');
 const { 
   getAllCampaigns, 
   getCompletedCampaigns,
