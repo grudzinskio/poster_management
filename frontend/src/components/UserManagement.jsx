@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-import { useSimplePermissions } from '../hooks/useSimplePermissions.jsx';
+import { useSimplePermissions, getRoleDisplayName } from '../hooks/useSimplePermissions.jsx';
 import PermissionGuard from './PermissionGuard';
 
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -24,15 +25,12 @@ function UserManagement({ token }) {
   const { get, post, put, del, error, setError } = useApi(token);
 
   const fetchUsers = async () => {
-    setLoading(true);
     setError('');
     try {
       const data = await get('/users');
       setUsers(data);
     } catch (err) {
       // Error is already set by useApi hook
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -45,9 +43,33 @@ function UserManagement({ token }) {
     }
   };
 
+  const fetchRoles = async () => {
+    try {
+      const data = await get('/roles');
+      setRoles(data);
+    } catch (err) {
+      console.error('Error fetching roles:', err);
+    }
+  };
+
   useEffect(() => {
-    fetchUsers();
-    fetchCompanies();
+    const loadAllData = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        await Promise.all([
+          fetchUsers(),
+          fetchCompanies(),
+          fetchRoles()
+        ]);
+      } catch (err) {
+        // Errors are already handled by individual fetch functions
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadAllData();
   }, [token]);
 
   const handleNewUserChange = (e) => {
@@ -195,6 +217,25 @@ function UserManagement({ token }) {
             </select>
           </td>
           <td className="table-cell">
+            <div className="flex flex-wrap gap-1">
+              {user.roles && user.roles.length > 0 ? (
+                user.roles.map((role, index) => (
+                  <span
+                    key={index}
+                    className="inline-flex px-2 py-1 text-xs font-medium rounded-md bg-purple-100 text-purple-800"
+                  >
+                    {getRoleDisplayName(role, roles)}
+                  </span>
+                ))
+              ) : (
+                <span className="text-xs text-gray-500">No roles assigned</span>
+              )}
+              <div className="text-xs text-gray-400 mt-1">
+                (Use Role Management to modify)
+              </div>
+            </div>
+          </td>
+          <td className="table-cell">
             <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="form-input cursor-pointer w-full min-w-0">
               <option value="">No Company</option>
               {companies.map(company => (
@@ -237,6 +278,22 @@ function UserManagement({ token }) {
           }`}>
             {user.user_type || 'unknown'}
           </span>
+        </td>
+        <td className="table-cell">
+          <div className="flex flex-wrap gap-1">
+            {user.roles && user.roles.length > 0 ? (
+              user.roles.map((role, index) => (
+                <span
+                  key={index}
+                  className="inline-flex px-2 py-1 text-xs font-medium rounded-md bg-purple-100 text-purple-800"
+                >
+                  {getRoleDisplayName(role, roles)}
+                </span>
+              ))
+            ) : (
+              <span className="text-xs text-gray-500">No roles assigned</span>
+            )}
+          </div>
         </td>
         <td className="table-cell">{user.company_name || 'No Company'}</td>
         <td className="table-cell">
@@ -381,6 +438,7 @@ function UserManagement({ token }) {
                 <th className="table-header">ID</th>
                 <th className="table-header">Username</th>
                 <th className="table-header">User Type</th>
+                <th className="table-header">Roles</th>
                 <th className="table-header">Company</th>
                 <th className="table-header">Actions</th>
               </tr>
