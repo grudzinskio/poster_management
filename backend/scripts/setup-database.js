@@ -11,8 +11,10 @@ async function setupDatabase() {
   try {
     // Clear existing data
     console.log('🧹 Clearing existing data...');
+    await knex('campaign_assignments').del();
     await knex('user_roles').del();
     await knex('role_permissions').del();
+    await knex('campaigns').del();
     await knex('users').del();
     await knex('companies').del();
     await knex('permissions').del();
@@ -161,7 +163,9 @@ async function setupDatabase() {
     const companies = [
       { name: 'TechCorp Inc' },
       { name: 'Marketing Solutions' },
-      { name: 'Creative Agency' }
+      { name: 'Creative Agency' },
+      { name: 'Digital Media Group' },
+      { name: 'Brand Dynamics LLC' }
     ];
     
     await knex('companies').insert(companies);
@@ -178,6 +182,8 @@ async function setupDatabase() {
     const techCorp = companyRecords.find(c => c.name === 'TechCorp Inc');
     const marketingSolutions = companyRecords.find(c => c.name === 'Marketing Solutions');
     const creativeAgency = companyRecords.find(c => c.name === 'Creative Agency');
+    const digitalMediaGroup = companyRecords.find(c => c.name === 'Digital Media Group');
+    const brandDynamics = companyRecords.find(c => c.name === 'Brand Dynamics LLC');
     
     const testUsers = [
       {
@@ -221,6 +227,36 @@ async function setupDatabase() {
         company_id: creativeAgency.id,
         user_type: 'contractor',
         role: 'contractor'
+      },
+      // Digital Media Group users
+      {
+        username: 'digital_admin',
+        password: hashedPassword,
+        company_id: digitalMediaGroup.id,
+        user_type: 'employee',
+        role: 'admin_manager'
+      },
+      {
+        username: 'digital_client',
+        password: hashedPassword,
+        company_id: digitalMediaGroup.id,
+        user_type: 'client',
+        role: 'client'
+      },
+      // Brand Dynamics users
+      {
+        username: 'brand_manager',
+        password: hashedPassword,
+        company_id: brandDynamics.id,
+        user_type: 'employee',
+        role: 'employee'
+      },
+      {
+        username: 'brand_client',
+        password: hashedPassword,
+        company_id: brandDynamics.id,
+        user_type: 'client',
+        role: 'client'
       }
     ];
 
@@ -260,6 +296,46 @@ async function setupDatabase() {
         end_date: new Date('2025-10-31'),
         status: 'pending',
         company_id: creativeAgency.id
+      },
+      {
+        name: 'TechCorp Rebranding',
+        description: 'Complete corporate rebranding initiative',
+        start_date: new Date('2025-08-15'),
+        end_date: new Date('2025-11-30'),
+        status: 'approved',
+        company_id: techCorp.id
+      },
+      {
+        name: 'Digital Media Campaign',
+        description: 'Multi-platform digital advertising campaign',
+        start_date: new Date('2025-07-01'),
+        end_date: new Date('2025-09-30'),
+        status: 'in_progress',
+        company_id: digitalMediaGroup.id
+      },
+      {
+        name: 'Brand Dynamics Q4 Push',
+        description: 'Year-end brand awareness campaign',
+        start_date: new Date('2025-10-01'),
+        end_date: new Date('2025-12-31'),
+        status: 'pending',
+        company_id: brandDynamics.id
+      },
+      {
+        name: 'Holiday Marketing Blitz',
+        description: 'Holiday season marketing campaign',
+        start_date: new Date('2025-11-01'),
+        end_date: new Date('2025-12-25'),
+        status: 'pending',
+        company_id: marketingSolutions.id
+      },
+      {
+        name: 'Creative Portfolio Showcase',
+        description: 'Showcase of creative agency capabilities',
+        start_date: new Date('2025-09-15'),
+        end_date: new Date('2025-10-15'),
+        status: 'approved',
+        company_id: creativeAgency.id
       }
     ];
     
@@ -291,6 +367,16 @@ async function setupDatabase() {
     console.log('      Username: employee1');
     console.log('      Password: password123');
     console.log('      Access: Read-only');
+    console.log('\n🏢 COMPANY USERS:');
+    console.log('   Digital Media Group:');
+    console.log('      Admin: digital_admin / password123');
+    console.log('      Client: digital_client / password123');
+    console.log('   Brand Dynamics LLC:');
+    console.log('      Manager: brand_manager / password123');
+    console.log('      Client: brand_client / password123');
+    console.log('\n🎯 CLIENT & CONTRACTOR:');
+    console.log('      Client: client1 / password123');
+    console.log('      Contractor: contractor1 / password123');
     console.log('\n✅ Setup completed successfully!');
 
   } catch (error) {
