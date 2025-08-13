@@ -1,11 +1,16 @@
 // middleware/index.js
-// Export all middleware functions
+// Export unified middleware functions
 
-const { authenticateToken, authorizeRole, authorizePermission, authorizeAnyRole } = require('./auth');
+const { 
+  authenticateToken, 
+  requirePermission, 
+  requireRole, 
+  requireAnyPermission 
+} = require('./unified-auth');
 
 module.exports = {
   authenticateToken,
-  authorizeRole,
-  authorizePermission,
-  authorizeAnyRole
+  requirePermission,
+  requireRole,
+  requireAnyPermission
 };

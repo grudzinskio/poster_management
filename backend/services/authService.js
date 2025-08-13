@@ -122,15 +122,7 @@ async function can(userId, permissionName) {
   }
 }
 
-/**
- * Check if user has specific permission (alias for can method)
- * @param {number} userId - User ID
- * @param {string} permissionName - Permission name
- * @returns {Promise<boolean>} - True if user has permission
- */
-async function hasPermission(userId, permissionName) {
-  return await can(userId, permissionName);
-}
+// hasPermission removed - use can() directly
 
 /**
  * Check if user has specific role
@@ -162,6 +154,5 @@ module.exports = {
   getUserPermissions,
   getUserRoles,
   can,
-  hasPermission,
   hasRole
 };
