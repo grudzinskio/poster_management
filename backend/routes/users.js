@@ -7,6 +7,26 @@ const { authenticateToken, requirePermission } = require('../middleware/enhanced
 const { getAllUsers, createUser, updateUser, updateUserPassword, deleteUser } = require('../controllers/userController');
 
 /**
+ * GET /api/users/me/permissions - Get current user's permissions as simple array
+ * Requires: Authentication only
+ * Returns: Array of permission strings
+ */
+router.get('/me/permissions', authenticateToken, async (req, res) => {
+  try {
+    const user = req.userInstance;
+    const permissions = await user.getPermissions();
+    
+    // Return simple array of permission names
+    const permissionArray = permissions.map(p => p.permission);
+    
+    res.json(permissionArray);
+  } catch (error) {
+    console.error('Error getting user permissions:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+/**
  * GET /api/users - Retrieve all users with company information and roles
  * Requires: Authentication + view_users permission
  * Returns: Users with joined company data and their assigned roles

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import PermissionGuard from './PermissionGuard';
 
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
@@ -321,12 +322,14 @@ function UserManagement({ token }) {
             >
               Password
             </button>
-            <button
-              className="btn-danger text-sm px-3 py-1.5"
-              onClick={() => handleDeleteUser(user.id)}
-            >
-              Delete
-            </button>
+            <PermissionGuard permission="delete_user">
+              <button
+                className="btn-danger text-sm px-3 py-1.5"
+                onClick={() => handleDeleteUser(user.id)}
+              >
+                Delete
+              </button>
+            </PermissionGuard>
           </div>
         </td>
       </tr>
@@ -445,7 +448,9 @@ function UserManagement({ token }) {
             </select>
           </div>
         </div>
-        <button type="submit" className="btn-success">Add User</button>
+        <PermissionGuard permission="create_user">
+          <button type="submit" className="btn-success">Add User</button>
+        </PermissionGuard>
       </form>
 
       {error && <div className="alert-error">{error}</div>}
