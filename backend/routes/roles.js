@@ -4,7 +4,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requirePermission } = require('../middleware/enhancedAuth');
+const { authenticateToken, requirePermission } = require('../middleware');
 const { 
   getAllRoles, 
   getRolePermissions, 
@@ -14,10 +14,16 @@ const {
 } = require('../controllers/roleController');
 
 /**
- * GET /api/roles - Retrieve all roles
+ * GET /api/roles - Retrieve all roles (for user management dropdowns)
+ * Requires: Authentication + view_roles permission (more accessible)
+ */
+router.get('/', authenticateToken, requirePermission('view_roles'), getAllRoles);
+
+/**
+ * GET /api/roles/manage - Retrieve all roles (for role management admin)
  * Requires: Authentication + manage_roles permission
  */
-router.get('/', authenticateToken, requirePermission('manage_roles'), getAllRoles);
+router.get('/manage', authenticateToken, requirePermission('manage_roles'), getAllRoles);
 
 /**
  * GET /api/roles/:roleName/permissions - Retrieve permissions for a specific role

@@ -235,8 +235,8 @@ async function deleteRole(req, res) {
 async function getAllPermissions(req, res) {
   try {
     const permissions = await knex('permissions')
-      .select('id', 'name', 'description')
-      .orderBy('name');
+      .select('id', 'permission', 'description')
+      .orderBy('permission');
     
     res.json(permissions);
   } catch (error) {

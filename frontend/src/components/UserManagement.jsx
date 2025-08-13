@@ -52,6 +52,16 @@ function UserManagement({ token }) {
       setRoles(data);
     } catch (err) {
       console.error('Error fetching roles:', err);
+      // Fallback to hardcoded roles if API fails
+      const fallbackRoles = [
+        { id: 1, name: 'super_admin', description: null },
+        { id: 2, name: 'admin_manager', description: null },
+        { id: 3, name: 'employee', description: null },
+        { id: 4, name: 'basic_employee', description: null },
+        { id: 5, name: 'client', description: null },
+        { id: 6, name: 'contractor', description: null }
+      ];
+      setRoles(fallbackRoles);
     }
   };
 
@@ -59,9 +69,9 @@ function UserManagement({ token }) {
   const getRelevantRoles = (userType) => {
     switch (userType) {
       case 'employee':
-        return roles.filter(role => ['super_admin', 'company_admin', 'employee'].includes(role.name));
+        return roles.filter(role => ['super_admin', 'admin_manager', 'employee', 'basic_employee'].includes(role.name));
       case 'client':
-        return roles.filter(role => ['client', 'company_admin'].includes(role.name));
+        return roles.filter(role => ['client'].includes(role.name));
       case 'contractor':
         return roles.filter(role => ['contractor'].includes(role.name));
       default:
@@ -256,7 +266,7 @@ function UserManagement({ token }) {
             >
               {getRelevantRoles(editData.user_type).map(role => (
                 <option key={role.id} value={role.name}>
-                  {role.name} - {role.description}
+                  {role.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </option>
               ))}
             </select>
@@ -430,7 +440,7 @@ function UserManagement({ token }) {
             >
               {getRelevantRoles(newUser.user_type).map(role => (
                 <option key={role.id} value={role.name}>
-                  {role.name} - {role.description}
+                  {role.name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                 </option>
               ))}
             </select>

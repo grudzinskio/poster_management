@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { authenticateToken, requirePermission } = require('../middleware/enhancedAuth');
+const { authenticateToken, requirePermission } = require('../middleware');
 const { login, migratePasswords, checkPermission } = require('../controllers/authController');
 
 /**

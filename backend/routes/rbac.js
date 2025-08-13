@@ -8,7 +8,7 @@ const {
   requirePermission, 
   requireRole, 
   requireAnyPermission 
-} = require('../middleware/enhancedAuth');
+} = require('../middleware');
 const {
   getMyPermissions,
   checkMyPermission,

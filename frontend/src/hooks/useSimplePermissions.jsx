@@ -1,50 +1,22 @@
 // hooks/useSimplePermissions.js
-// Simple permission management hook using array storage
+// Database-driven permission management hook
 
 import { useState, useEffect, useContext, createContext } from 'react';
 
 // Create permissions context
 const SimplePermissionsContext = createContext();
 
-// All possible permissions in the system
-const ALL_PERMISSIONS = [
-  // User management
-  'view_users',
-  'create_user',
-  'edit_user',
-  'delete_user',
-  
-  // Company management
-  'view_companies',
-  'create_company',
-  'edit_company',
-  'delete_company',
-  
-  // Campaign management
-  'view_campaigns',
-  'create_campaign',
-  'edit_campaign',
-  'delete_campaign',
-  'assign_campaign',
-  
-  // Role management
-  'manage_roles',
-  'view_roles',
-  
-  // Other permissions
-  'view_reports',
-  'system_admin'
-];
-
 // Provider component
 export function SimplePermissionsProvider({ children, token }) {
   const [userPermissions, setUserPermissions] = useState([]);
+  const [allPermissions, setAllPermissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (token) {
       fetchPermissions();
+      fetchAllPermissions();
     }
   }, [token]);
 
@@ -75,6 +47,26 @@ export function SimplePermissionsProvider({ children, token }) {
     }
   };
 
+  const fetchAllPermissions = async () => {
+    try {
+      const response = await fetch('/api/permissions', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const permissions = await response.json();
+        setAllPermissions(Array.isArray(permissions) ? permissions.map(p => p.permission || p) : []);
+      }
+    } catch (err) {
+      console.error('Error fetching all permissions:', err);
+      // Fallback to user permissions if we can't fetch all permissions
+      setAllPermissions([]);
+    }
+  };
+
   // Check if user has a specific permission
   const hasPermission = (permission) => {
     return userPermissions.includes(permission);
@@ -92,7 +84,7 @@ export function SimplePermissionsProvider({ children, token }) {
 
   // Get permissions user doesn't have
   const getMissingPermissions = () => {
-    return ALL_PERMISSIONS.filter(permission => !userPermissions.includes(permission));
+    return allPermissions.filter(permission => !userPermissions.includes(permission));
   };
 
   // Get user permissions grouped by category
@@ -124,6 +116,7 @@ export function SimplePermissionsProvider({ children, token }) {
 
   const value = {
     userPermissions,
+    allPermissions,
     loading,
     error,
     hasPermission,
@@ -132,8 +125,7 @@ export function SimplePermissionsProvider({ children, token }) {
     getMissingPermissions,
     getPermissionsByCategory,
     getMissingPermissionsByCategory,
-    refetch: fetchPermissions,
-    allPermissions: ALL_PERMISSIONS
+    refetch: fetchPermissions
   };
 
   return (
@@ -174,13 +166,18 @@ export function getPermissionDisplayName(permission) {
     'delete_campaign': 'Delete Campaigns',
     'assign_campaign': 'Assign Campaigns',
     
-    // Role management
+    // Role & System management
     'manage_roles': 'Manage Roles',
     'view_roles': 'View Roles',
-    
-    // Other permissions
+    'manage_permissions': 'Manage Permissions',
+    'system_admin': 'System Administration',
     'view_reports': 'View Reports',
-    'system_admin': 'System Administration'
+    
+    // Advanced admin controls
+    'database_backup': 'Database Backup',
+    'system_settings': 'System Settings',
+    'audit_logs': 'Audit Logs',
+    'emergency_access': 'Emergency Access'
   };
   
   return displayNames[permission] || permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
