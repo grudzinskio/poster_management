@@ -2,13 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-import { getRoleDisplayName } from '../hooks/useSimplePermissions.jsx';
+import { useSimplePermissions } from '../hooks/useSimplePermissions.jsx';
 import PermissionGuard from './PermissionGuard';
 
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -19,7 +18,6 @@ function UserManagement({ token }) {
     username: '', 
     password: '', 
     user_type: 'client',
-    roles: ['client'],
     company_id: ''
   });
 
@@ -47,50 +45,13 @@ function UserManagement({ token }) {
     }
   };
 
-  const fetchRoles = async () => {
-    try {
-      const data = await get('/roles');
-      setRoles(data);
-    } catch (err) {
-      console.error('Error fetching roles:', err);
-      throw new Error('Failed to fetch roles from API. API may not be working correctly.');
-    }
-  };
-
-  // Filter roles based on user type
-  const getRelevantRoles = (userType) => {
-    switch (userType) {
-      case 'employee':
-        return roles.filter(role => ['super_admin', 'admin_manager', 'employee', 'basic_employee'].includes(role.name));
-      case 'client':
-        return roles.filter(role => ['client'].includes(role.name));
-      case 'contractor':
-        return roles.filter(role => ['contractor'].includes(role.name));
-      default:
-        return roles;
-    }
-  };
-
   useEffect(() => {
     fetchUsers();
     fetchCompanies();
-    fetchRoles();
   }, [token]);
 
   const handleNewUserChange = (e) => {
-    if (e.target.name === 'roles') {
-      // Handle multi-select for roles
-      const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-      setNewUser({ ...newUser, roles: selectedOptions });
-    } else if (e.target.name === 'user_type') {
-      // When user type changes, reset roles to appropriate default
-      const userType = e.target.value;
-      const relevantRoles = getRelevantRoles(userType);
-      const defaultRole = relevantRoles.length > 0 ? [relevantRoles[0].name] : [];
-      setNewUser({ ...newUser, user_type: userType, roles: defaultRole });
-    } else {
-      setNewUser({ ...newUser, [e.target.name]: e.target.value });
-    }
+    setNewUser({ ...newUser, [e.target.name]: e.target.value });
     if (error) setError('');
     if (success) setSuccess('');
   };
@@ -110,7 +71,6 @@ function UserManagement({ token }) {
         username: '', 
         password: '', 
         user_type: 'client',
-        roles: ['client'],
         company_id: ''
       });
       setSuccess('User added successfully!');
@@ -206,24 +166,11 @@ function UserManagement({ token }) {
     const [editData, setEditData] = useState({
       username: user.username,
       user_type: user.user_type || 'client',
-      roles: user.roles || ['client'],
       company_id: user.company_id || ''
     });
 
     const handleEditChange = (e) => {
-      if (e.target.name === 'roles') {
-        // Handle multi-select for roles
-        const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-        setEditData({ ...editData, roles: selectedOptions });
-      } else if (e.target.name === 'user_type') {
-        // When user type changes, reset roles to appropriate default
-        const userType = e.target.value;
-        const relevantRoles = getRelevantRoles(userType);
-        const defaultRole = relevantRoles.length > 0 ? [relevantRoles[0].name] : [];
-        setEditData({ ...editData, user_type: userType, roles: defaultRole });
-      } else {
-        setEditData({ ...editData, [e.target.name]: e.target.value });
-      }
+      setEditData({ ...editData, [e.target.name]: e.target.value });
     };
 
     if (editingId === user.id) {
@@ -246,23 +193,6 @@ function UserManagement({ token }) {
               <option value="client">Client</option>
               <option value="contractor">Contractor</option>
             </select>
-          </td>
-          <td className="table-cell">
-            <select 
-              name="roles" 
-              value={editData.roles} 
-              onChange={handleEditChange} 
-              className="form-input cursor-pointer"
-              multiple
-              size="3"
-            >
-              {getRelevantRoles(editData.user_type).map(role => (
-                <option key={role.id} value={role.name}>
-                  {getRoleDisplayName(role.name, roles)}
-                </option>
-              ))}
-            </select>
-            <div className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</div>
           </td>
           <td className="table-cell">
             <select name="company_id" value={editData.company_id} onChange={handleEditChange} className="form-input cursor-pointer w-full min-w-0">
@@ -308,7 +238,6 @@ function UserManagement({ token }) {
             {user.user_type || 'unknown'}
           </span>
         </td>
-        <td className="table-cell">{user.roles && user.roles.length > 0 ? user.roles.join(', ') : 'No roles'}</td>
         <td className="table-cell">{user.company_name || 'No Company'}</td>
         <td className="table-cell">
           <div className="flex gap-2 flex-wrap">
@@ -420,25 +349,6 @@ function UserManagement({ token }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Roles *</label>
-            <select 
-              name="roles" 
-              value={newUser.roles} 
-              onChange={handleNewUserChange} 
-              className="form-input cursor-pointer"
-              multiple
-              size="3"
-              required
-            >
-              {getRelevantRoles(newUser.user_type).map(role => (
-                <option key={role.id} value={role.name}>
-                  {getRoleDisplayName(role.name, roles)}
-                </option>
-              ))}
-            </select>
-            <div className="text-xs text-gray-500 mt-1">Hold Ctrl/Cmd for multiple</div>
-          </div>
-          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
             <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
               <option value="">No Company</option>
@@ -471,7 +381,6 @@ function UserManagement({ token }) {
                 <th className="table-header">ID</th>
                 <th className="table-header">Username</th>
                 <th className="table-header">User Type</th>
-                <th className="table-header">Role</th>
                 <th className="table-header">Company</th>
                 <th className="table-header">Actions</th>
               </tr>

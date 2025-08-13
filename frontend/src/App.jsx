@@ -20,6 +20,7 @@ import { useState, useEffect } from 'react';
 import Login from './components/Login';
 import UserManagement from './components/UserManagement';
 import CompanyManagement from './components/CompanyManagement';
+import RoleManagement from './components/RoleManagement';
 import ClientCampaignManagement from './components/ClientCampaignManagement';
 import EmployeeCampaignManagement from './components/EmployeeCampaignManagement';
 import ContractorCampaignManagement from './components/ContractorCampaignManagement';
@@ -152,6 +153,19 @@ function App() {
                   Company Management
                 </button>
               </PermissionGuard>
+              {/* Show role management tab only for super admins */}
+              {hasRole('super_admin') && (
+                <button 
+                  className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                    activeTab === 'roles' 
+                      ? 'border-blue-600 text-blue-600 bg-blue-50' 
+                      : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                  }`}
+                  onClick={() => setActiveTab('roles')}
+                >
+                  Role Management
+                </button>
+              )}
             </div>
           )}
 
@@ -163,6 +177,9 @@ function App() {
           <PermissionGuard permission="view_companies">
             {activeTab === 'companies' && <CompanyManagement token={token} />}
           </PermissionGuard>
+
+          {/* Role Management - Super Admin Only */}
+          {hasRole('super_admin') && activeTab === 'roles' && <RoleManagement token={token} />}
           
           <PermissionGuard permission="view_campaigns">
             {(hasRole('super_admin') || hasRole('admin_manager') || hasRole('employee')) && activeTab === 'campaigns' && <EmployeeCampaignManagement token={token} user={user} />}
