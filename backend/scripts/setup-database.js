@@ -1,6 +1,6 @@
-// Unified database setup script
-// Replaces run-seeds.js, setup-test-data.js complexity
-// No hardcoded data - everything defined here as the single source
+// Database setup script
+// Sets up complete database schema and fills with initial data
+// Single source for all database setup and seeding
 
 const knex = require('../config/knex');
 const { hashPassword } = require('../services/authService');
@@ -22,11 +22,15 @@ async function setupDatabase() {
     // 1. Insert Roles
     console.log('👥 Creating roles...');
     const roles = [
-      { name: 'employee', description: 'Employee' },
-      { name: 'client', description: 'Client' },
-      { name: 'contractor', description: 'Contractor' },
-      { name: 'limited_employee', description: 'Limited Employee' },
-      { name: 'basic_employee', description: 'Basic Employee' }
+      // Employee hierarchy (most powerful to least)
+      { name: 'super_admin', description: 'Super Administrator' },      // Full system control
+      { name: 'admin_manager', description: 'Admin Manager' },    // Limited admin controls
+      { name: 'employee', description: 'Employee' },         // Standard employee
+      { name: 'basic_employee', description: 'Basic Employee' },   // Read-only employee
+      
+      // External roles
+      { name: 'client', description: 'Client' },           // Customer role
+      { name: 'contractor', description: 'Contractor' }        // External contractor
     ];
     await knex('roles').insert(roles);
     console.log(`✅ Created ${roles.length} roles\n`);
@@ -53,13 +57,18 @@ async function setupDatabase() {
       { permission: 'delete_campaign', description: 'Delete Campaigns' },
       { permission: 'assign_campaign', description: 'Assign Campaigns' },
       
-      // Role management
+      // Role & System management
       { permission: 'manage_roles', description: 'Manage Roles' },
       { permission: 'view_roles', description: 'View Roles' },
-      
-      // System
       { permission: 'system_admin', description: 'System Administration' },
-      { permission: 'view_reports', description: 'View Reports' }
+      { permission: 'view_reports', description: 'View Reports' },
+      { permission: 'manage_permissions', description: 'Manage Permissions' },
+      
+      // Advanced admin controls
+      { permission: 'database_backup', description: 'Database Backup' },
+      { permission: 'system_settings', description: 'System Settings' },
+      { permission: 'audit_logs', description: 'Audit Logs' },
+      { permission: 'emergency_access', description: 'Emergency Access' }
     ];
     await knex('permissions').insert(permissions);
     console.log(`✅ Created ${permissions.length} permissions\n`);
@@ -74,20 +83,64 @@ async function setupDatabase() {
     // 4. Assign permissions to roles
     console.log('🔗 Assigning permissions to roles...');
     const rolePermissionMappings = [
-      // Employee - full access
-      { role: 'employee', permissions: ['view_users', 'create_user', 'edit_user', 'delete_user', 'view_companies', 'create_company', 'edit_company', 'delete_company', 'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'assign_campaign', 'manage_roles', 'view_roles', 'system_admin', 'view_reports'] },
+      // SUPER ADMIN - Complete system control (all permissions)
+      { 
+        role: 'super_admin', 
+        permissions: [
+          'view_users', 'create_user', 'edit_user', 'delete_user',
+          'view_companies', 'create_company', 'edit_company', 'delete_company',
+          'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'assign_campaign',
+          'manage_roles', 'view_roles', 'manage_permissions',
+          'system_admin', 'view_reports', 'database_backup', 'system_settings', 'audit_logs', 'emergency_access'
+        ] 
+      },
       
-      // Client - campaign management only
-      { role: 'client', permissions: ['view_campaigns', 'create_campaign', 'edit_campaign'] },
+      // ADMIN MANAGER - Limited admin controls (no system-level or destructive operations)
+      { 
+        role: 'admin_manager', 
+        permissions: [
+          'view_users', 'create_user', 'edit_user',           // Can manage users but not delete
+          'view_companies', 'create_company', 'edit_company', // Can manage companies but not delete
+          'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'assign_campaign',
+          'view_roles',                                       // Can view roles but not manage
+          'view_reports'                                      // Can view reports
+        ] 
+      },
       
-      // Contractor - view only
-      { role: 'contractor', permissions: ['view_campaigns'] },
+      // EMPLOYEE - Standard business operations (no admin or delete permissions)
+      { 
+        role: 'employee', 
+        permissions: [
+          'view_users', 'create_user', 'edit_user',           // Can manage users but not delete
+          'view_companies', 'edit_company',                   // Can view and edit companies
+          'view_campaigns', 'create_campaign', 'edit_campaign', 'assign_campaign',
+          'view_roles'                                        // Can view roles
+        ] 
+      },
       
-      // Limited employee - no delete permissions
-      { role: 'limited_employee', permissions: ['view_users', 'create_user', 'edit_user', 'view_companies', 'create_company', 'edit_company', 'view_campaigns', 'create_campaign', 'edit_campaign', 'assign_campaign', 'view_roles'] },
+      // BASIC EMPLOYEE - Read-only access to most data
+      { 
+        role: 'basic_employee', 
+        permissions: [
+          'view_users', 'view_companies', 'view_campaigns'    // Read-only access
+        ] 
+      },
       
-      // Basic employee - read only
-      { role: 'basic_employee', permissions: ['view_users', 'view_companies', 'view_campaigns'] }
+      // CLIENT - Campaign management for their own projects
+      { 
+        role: 'client', 
+        permissions: [
+          'view_campaigns', 'create_campaign', 'edit_campaign' // Campaign management only
+        ] 
+      },
+      
+      // CONTRACTOR - View-only access to assigned work
+      { 
+        role: 'contractor', 
+        permissions: [
+          'view_campaigns'                                    // View campaigns only
+        ] 
+      }
     ];
     
     const rolePermissionData = [];
@@ -128,18 +181,32 @@ async function setupDatabase() {
     
     const testUsers = [
       {
+        username: 'superadmin',
+        password: hashedPassword,
+        company_id: techCorp.id,
+        user_type: 'employee',
+        role: 'super_admin'
+      },
+      {
         username: 'admin',
         password: hashedPassword,
         company_id: techCorp.id,
         user_type: 'employee',
-        role: 'employee'
+        role: 'admin_manager'
       },
       {
         username: 'manager',
         password: hashedPassword,
         company_id: techCorp.id,
         user_type: 'employee',
-        role: 'limited_employee'
+        role: 'employee'
+      },
+      {
+        username: 'employee1',
+        password: hashedPassword,
+        company_id: techCorp.id,
+        user_type: 'employee',
+        role: 'basic_employee'
       },
       {
         username: 'client1',
@@ -151,7 +218,7 @@ async function setupDatabase() {
       {
         username: 'contractor1',
         password: hashedPassword,
-        company_id: techCorp.id,
+        company_id: creativeAgency.id,
         user_type: 'contractor',
         role: 'contractor'
       }
@@ -207,10 +274,24 @@ async function setupDatabase() {
     console.log(`   • ${companies.length} test companies`);
     console.log(`   • ${testUsers.length} test users`);
     console.log(`   • ${campaigns.length} sample campaigns`);
-    console.log('\n🔑 Test Login:');
-    console.log('   Username: admin');
-    console.log('   Password: password123\n');
-    console.log('✅ Setup completed successfully!');
+    console.log('\n🔑 Test Logins:');
+    console.log('   👑 SUPER ADMIN:');
+    console.log('      Username: superadmin');
+    console.log('      Password: password123');
+    console.log('      Access: Full system control');
+    console.log('   🛡️  ADMIN MANAGER:');
+    console.log('      Username: admin');
+    console.log('      Password: password123');
+    console.log('      Access: Limited admin controls');
+    console.log('   👨‍💼 EMPLOYEE:');
+    console.log('      Username: manager');
+    console.log('      Password: password123');
+    console.log('      Access: Standard business operations');
+    console.log('   👤 BASIC EMPLOYEE:');
+    console.log('      Username: employee1');
+    console.log('      Password: password123');
+    console.log('      Access: Read-only');
+    console.log('\n✅ Setup completed successfully!');
 
   } catch (error) {
     console.error('❌ Setup failed:', error);

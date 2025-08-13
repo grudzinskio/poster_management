@@ -50,8 +50,6 @@ async function getAllRoles(req, res) {
 async function getRolePermissions(req, res) {
   const { roleName } = req.params;
   
-  console.log('getRolePermissions called with roleName:', roleName, 'type:', typeof roleName);
-  
   if (!roleName) {
     return res.status(400).json({ error: 'Role name is required' });
   }
@@ -64,15 +62,11 @@ async function getRolePermissions(req, res) {
       return res.status(404).json({ error: 'Role not found' });
     }
     
-    console.log('Found role:', role);
-    
     const permissions = await knex('role_permissions as rp')
       .join('permissions as p', 'rp.permission', 'p.id')
       .where('rp.role', '=', role.id)
       .select('p.id', 'p.permission', 'p.description')
       .orderBy('p.permission');
-    
-    console.log('Found permissions for role', roleName, ':', permissions.length);
     res.json(permissions);
   } catch (error) {
     console.error('Error fetching role permissions:', error);
@@ -156,8 +150,6 @@ async function updateRolePermissions(req, res) {
   const { roleName } = req.params;
   const { permissions } = req.body;
   
-  console.log('updateRolePermissions called with roleName:', roleName, 'permissions:', permissions);
-  
   if (!Array.isArray(permissions)) {
     return res.status(400).json({ error: 'permissions must be an array' });
   }
@@ -174,7 +166,6 @@ async function updateRolePermissions(req, res) {
     }
     
     const roleId = role.id;
-    console.log('Found role ID:', roleId, 'for role:', roleName);
     
     // Remove existing permissions for this role
     await trx('role_permissions').where('role', roleId).del();
@@ -185,8 +176,6 @@ async function updateRolePermissions(req, res) {
       const permissionRecords = await trx('permissions')
         .whereIn('permission', permissions)
         .select('id', 'permission');
-      
-      console.log('Found permission records:', permissionRecords);
       
       if (permissionRecords.length !== permissions.length) {
         await trx.rollback();
