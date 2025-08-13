@@ -43,23 +43,6 @@ async function getRolePermissions(req, res) {
 }
 
 /**
- * GET /api/permissions - Retrieve all permissions
- */
-async function getAllPermissions(req, res) {
-  try {
-    const permissions = await knex('permissions')
-      .where('is_active', true)
-      .select('id', 'name', 'description', 'resource', 'action')
-      .orderBy('name');
-    
-    res.json(permissions);
-  } catch (error) {
-    console.error('Error fetching permissions:', error);
-    res.status(500).json({ error: 'Failed to fetch permissions' });
-  }
-}
-
-/**
  * POST /api/roles - Create a new role
  */
 async function createRole(req, res) {
@@ -214,7 +197,6 @@ async function deleteRole(req, res) {
 module.exports = {
   getAllRoles,
   getRolePermissions,
-  getAllPermissions,
   createRole,
   updateRolePermissions,
   updateRole,
