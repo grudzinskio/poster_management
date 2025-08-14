@@ -1,6 +1,7 @@
 // frontend/src/components/UserManagement.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useMultipleDataFetching } from '../hooks/useDataFetching';
 import { useApi } from '../hooks/useApi';
 import { useUserPermissions } from '../hooks/useUser.jsx';
 import Permission, { 
@@ -9,12 +10,11 @@ import Permission, {
   UserDeleteButton, 
   UserCreateButton 
 } from './Permission';
+import LoadingSpinner from './ui/LoadingSpinner';
+import ErrorAlert from './ui/ErrorAlert';
+import SuccessAlert from './ui/SuccessAlert';
 
 function UserManagement({ token }) {
-  const [users, setUsers] = useState([]);
-  const [companies, setCompanies] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [changingPasswordId, setChangingPasswordId] = useState(null);
@@ -27,80 +27,35 @@ function UserManagement({ token }) {
     company_id: ''
   });
 
-  const { get, post, put, del, error, setError } = useApi(token);
+  const { post, put, del, error: apiError, setError: setApiError } = useApi(token);
   const { can } = useUserPermissions();
 
-  const fetchUsers = async () => {
-    setError('');
-    try {
-      const data = await get('/users');
-      setUsers(data);
-    } catch (err) {
-      // Error is already set by useApi hook
-    }
-  };
+  // Fetch all required data in parallel
+  const { 
+    data: { users = [], companies = [], roles = [] }, 
+    loading, 
+    error: fetchError, 
+    refetch 
+  } = useMultipleDataFetching(['/users', '/companies', '/roles'], token);
 
-  const fetchCompanies = async () => {
-    try {
-      const data = await get('/companies');
-      setCompanies(data);
-    } catch (err) {
-      console.error('Error fetching companies:', err);
-    }
-  };
-
-  const fetchRoles = async () => {
-    // Use User.user.can() method to check permissions before fetching
-    if (!can('view_roles')) {
-      console.log('User does not have view_roles permission, skipping role fetch');
-      return;
-    }
-    
-    try {
-      const data = await get('/roles');
-      setRoles(data);
-    } catch (err) {
-      console.error('Error fetching roles:', err);
-    }
-  };
-
-  useEffect(() => {
-    const loadAllData = async () => {
-      setLoading(true);
-      setError('');
-      try {
-        await Promise.all([
-          fetchUsers(),
-          fetchCompanies(),
-          fetchRoles()
-        ]);
-      } catch (err) {
-        // Errors are already handled by individual fetch functions
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    loadAllData();
-  }, [token]);
+  const error = apiError || fetchError;
 
   const handleNewUserChange = (e) => {
     setNewUser({ ...newUser, [e.target.name]: e.target.value });
-    if (error) setError('');
+    if (error) setApiError('');
     if (success) setSuccess('');
   };
 
   const handleAddUser = async (e) => {
     e.preventDefault();
-    setError('');
+    setApiError('');
     setSuccess('');
     
     try {
       const userData = { ...newUser };
       if (userData.company_id === '') userData.company_id = null;
       
-      const data = await post('/users', userData);
-      setUsers([...users, data]);
+      await post('/users', userData);
       setNewUser({ 
         username: '', 
         password: '', 
@@ -108,6 +63,7 @@ function UserManagement({ token }) {
         company_id: ''
       });
       setSuccess('User added successfully!');
+      refetch(); // Use refetch instead of manual state update
     } catch (err) {
       // Error is already set by useApi hook
     }
@@ -115,21 +71,21 @@ function UserManagement({ token }) {
 
   const handleEditUser = (user) => {
     setEditingId(user.id);
-    setError('');
+    setApiError('');
     setSuccess('');
   };
 
   const handleSaveEdit = async (userId, updatedData) => {
-    setError('');
+    setApiError('');
     setSuccess('');
     
     try {
       if (updatedData.company_id === '') updatedData.company_id = null;
       
-      const data = await put(`/users/${userId}`, updatedData);
-      setUsers(users.map(user => user.id === userId ? data : user));
+      await put(`/users/${userId}`, updatedData);
       setEditingId(null);
       setSuccess('User updated successfully!');
+      refetch(); // Use refetch instead of manual state update
     } catch (err) {
       // Error is already set by useApi hook
     }
@@ -137,13 +93,13 @@ function UserManagement({ token }) {
 
   const handleDeleteUser = async (userId) => {
     if (!window.confirm('Are you sure you want to delete this user?')) return;
-    setError('');
+    setApiError('');
     setSuccess('');
     
     try {
       await del(`/users/${userId}`);
-      setUsers(users.filter((user) => user.id !== userId));
       setSuccess('User deleted successfully!');
+      refetch(); // Use refetch instead of manual state update
     } catch (err) {
       // Error is already set by useApi hook
     }
@@ -152,7 +108,7 @@ function UserManagement({ token }) {
   const handleChangePassword = (userId) => {
     setChangingPasswordId(userId);
     setPasswordInputs(prev => ({ ...prev, [userId]: '' }));
-    setError('');
+    setApiError('');
     setSuccess('');
   };
 
@@ -163,11 +119,11 @@ function UserManagement({ token }) {
   const handleSavePassword = async (userId) => {
     const password = passwordInputs[userId] || '';
     if (!password || password.length < 6) {
-      setError('Password must be at least 6 characters long');
+      setApiError('Password must be at least 6 characters long');
       return;
     }
     
-    setError('');
+    setApiError('');
     setSuccess('');
     
     try {
@@ -192,7 +148,7 @@ function UserManagement({ token }) {
       delete newInputs[userId];
       return newInputs;
     });
-    setError('');
+    setApiError('');
     setSuccess('');
   };
 
@@ -442,14 +398,11 @@ function UserManagement({ token }) {
         </form>
       </PermissionGuard>
 
-      {error && <div className="alert-error">{error}</div>}
-      {success && <div className="alert-success">{success}</div>}
+      <ErrorAlert error={error} onClose={() => setApiError('')} />
+      <SuccessAlert message={success} onClose={() => setSuccess('')} />
 
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="spinner"></div>
-          <span className="ml-2 text-gray-600">Loading users...</span>
-        </div>
+        <LoadingSpinner message="Loading users..." />
       ) : (
         <div className="bg-white border border-gray-300">
           <table className="w-full border-collapse">

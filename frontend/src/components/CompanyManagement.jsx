@@ -1,54 +1,42 @@
 // frontend/src/components/CompanyManagement.jsx
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useApi } from '../hooks/useApi';
+import { useDataFetching } from '../hooks/useDataFetching';
 import { PermissionGuard } from './Permission';
 import Permission, { CompanyCreateButton } from './Permission';
+import LoadingSpinner from './ui/LoadingSpinner';
+import ErrorAlert from './ui/ErrorAlert';
+import SuccessAlert from './ui/SuccessAlert';
 
 function CompanyManagement({ token }) {
-  const [companies, setCompanies] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [newCompany, setNewCompany] = useState({
     name: ''
   });
 
-  const { get, post, put, del, error, setError } = useApi(token);
+  const { post, put, del, error: apiError, setError: setApiError } = useApi(token);
+  const { data: companies, loading, error: fetchError, refetch } = useDataFetching('/companies', token);
 
-  const fetchCompanies = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await get('/companies');
-      setCompanies(data);
-    } catch (err) {
-      // Error is already set by useApi hook
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCompanies();
-  }, [token]);
+  const error = apiError || fetchError;
 
   const handleNewCompanyChange = (e) => {
     setNewCompany({ ...newCompany, [e.target.name]: e.target.value });
-    if (error) setError('');
+    if (error) setApiError('');
     if (success) setSuccess('');
   };
 
   const handleAddCompany = async (e) => {
     e.preventDefault();
-    setError('');
+    setApiError('');
     setSuccess('');
     
     try {
-      const data = await post('/companies', newCompany);
-      setCompanies([...companies, data]);
+      await post('/companies', newCompany);
       setNewCompany({ name: '' });
       setSuccess('Company added successfully!');
+      refetch(); // Use refetch instead of manual state update
     } catch (err) {
       // Error is already set by useApi hook
     }
@@ -56,7 +44,7 @@ function CompanyManagement({ token }) {
 
   const handleEditCompany = (company) => {
     setEditingId(company.id);
-    setError('');
+    setApiError('');
     setSuccess('');
   };
 
@@ -66,9 +54,9 @@ function CompanyManagement({ token }) {
     
     try {
       const data = await put(`/companies/${companyId}`, updatedData);
-      setCompanies(companies.map(company => company.id === companyId ? data : company));
       setEditingId(null);
       setSuccess('Company updated successfully!');
+      refetch(); // Use refetch instead of manual state update
     } catch (err) {
       // Error is already set by useApi hook
     }
@@ -76,13 +64,13 @@ function CompanyManagement({ token }) {
 
   const handleDeleteCompany = async (companyId) => {
     if (!window.confirm('Are you sure you want to delete this company?')) return;
-    setError('');
+    setApiError('');
     setSuccess('');
     
     try {
       await del(`/companies/${companyId}`);
-      setCompanies(companies.filter((company) => company.id !== companyId));
       setSuccess('Company deleted successfully!');
+      refetch(); // Use refetch instead of manual state update
     } catch (err) {
       // Error is already set by useApi hook
     }
@@ -186,14 +174,11 @@ function CompanyManagement({ token }) {
         <CompanyCreateButton type="submit" />
       </form>
 
-      {error && <div className="alert-error">{error}</div>}
-      {success && <div className="alert-success">{success}</div>}
+      <ErrorAlert error={error} onClose={() => setApiError('')} />
+      <SuccessAlert message={success} onClose={() => setSuccess('')} />
 
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="spinner"></div>
-          <span className="ml-2 text-gray-600">Loading companies...</span>
-        </div>
+        <LoadingSpinner message="Loading companies..." />
       ) : (
         <div className="overflow-x-auto bg-white border border-gray-300">
           <table className="w-full border-collapse">

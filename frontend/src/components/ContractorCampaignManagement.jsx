@@ -1,50 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import { useDataFetching } from '../hooks/useDataFetching';
+import { formatDate, getStatusDisplay } from '../utils/formatters';
+import LoadingSpinner from './ui/LoadingSpinner';
+import ErrorAlert from './ui/ErrorAlert';
+import CampaignCard from './ui/CampaignCard';
 
 function ContractorCampaignManagement({ token, user }) {
-  const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [completedCampaigns, setCompletedCampaigns] = useState([]);
   const [showCompleted, setShowCompleted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState({});
-  const { get, put, post, error, setError } = useApi(token);
+  
+  const { get, put, post, error: apiError, setError: setApiError } = useApi(token);
+  
+  // Use custom hook for active campaigns
+  const { 
+    data: campaigns, 
+    loading: campaignsLoading, 
+    error: fetchError,
+    refetch: refetchCampaigns 
+  } = useDataFetching('/campaigns/contractor', token);
 
-  // Fetch assigned campaigns
-  const fetchCampaigns = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await get('/campaigns/contractor');
-      setCampaigns(data);
-    } catch (err) {
-      console.error('Error fetching campaigns:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const error = apiError || fetchError;
+  
+  // Keep manual fetching for completed campaigns since it's conditional
+  const [completedLoading, setCompletedLoading] = useState(false);
 
   // Fetch completed campaigns
   const fetchCompletedCampaigns = async () => {
-    setLoading(true);
-    setError('');
+    setCompletedLoading(true);
+    setApiError('');
     try {
       const data = await get('/campaigns/completed');
       setCompletedCampaigns(data);
     } catch (err) {
       console.error('Error fetching completed campaigns:', err);
     } finally {
-      setLoading(false);
+      setCompletedLoading(false);
     }
   };
 
   useEffect(() => {
     if (showCompleted) {
       fetchCompletedCampaigns();
-    } else {
-      fetchCampaigns();
     }
-  }, [token, showCompleted]);
+    // Active campaigns are automatically fetched by useDataFetching hook
+  }, [showCompleted]);
 
   // Status update handler
   const handleStatusUpdate = async (campaignId, currentStatus) => {
@@ -55,9 +57,9 @@ function ContractorCampaignManagement({ token, user }) {
 
     try {
       await put(`/campaigns/${campaignId}/contractor-status`, { status: nextStatus });
-      fetchCampaigns();
+      refetchCampaigns(); // Use refetch from custom hook
     } catch (err) {
-      setError('Failed to update status');
+      setApiError('Failed to update status');
     }
   };
 
@@ -69,7 +71,7 @@ function ContractorCampaignManagement({ token, user }) {
   const handleUpload = async (campaignId) => {
     if (!selectedFiles[campaignId] || selectedFiles[campaignId].length === 0) return;
     setUploading(true);
-    setError('');
+    setApiError('');
     try {
       const formData = new FormData();
       Array.from(selectedFiles[campaignId]).forEach(file => {
@@ -77,29 +79,16 @@ function ContractorCampaignManagement({ token, user }) {
       });
       await post(`/campaigns/${campaignId}/images`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSelectedFiles({ ...selectedFiles, [campaignId]: null });
-      fetchCampaigns();
+      refetchCampaigns(); // Use refetch instead of fetchCampaigns
     } catch (err) {
-      setError('Failed to upload images');
+      setApiError('Failed to upload images');
     } finally {
       setUploading(false);
     }
   };
 
-  const getStatusDisplay = (status) => {
-    const statusMap = {
-      'pending': 'Pending Review',
-      'approved': 'Approved',
-      'in_progress': 'In Progress',
-      'completed': 'Completed',
-      'cancelled': 'Cancelled'
-    };
-    return statusMap[status] || status;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString();
-  };
+  const loading = showCompleted ? completedLoading : campaignsLoading;
+  const displayCampaigns = showCompleted ? completedCampaigns : campaigns;
 
   return (
     <div className="bg-white p-6 shadow-sm border border-gray-300">
@@ -120,12 +109,9 @@ function ContractorCampaignManagement({ token, user }) {
           Completed Campaigns
         </button>
       </div>
-      {error && <div className="alert-error">{error}</div>}
+      <ErrorAlert error={error} onClose={() => { setApiError(''); }} />
       {loading ? (
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin h-5 w-5 border-2 border-gray-300 border-t-blue-600 rounded-full"></div>
-          <span className="ml-2 text-gray-600">Loading campaigns...</span>
-        </div>
+        <LoadingSpinner message="Loading campaigns..." />
       ) : showCompleted ? (
         completedCampaigns.length === 0 ? (
           <div className="text-center py-8 text-gray-500">

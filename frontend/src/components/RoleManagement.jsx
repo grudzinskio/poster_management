@@ -1,51 +1,39 @@
 // components/RoleManagement.jsx
 // Role management interface for super admins only
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useMultipleDataFetching } from '../hooks/useDataFetching';
 import { useApi } from '../hooks/useApi';
 import { getRoleDisplayName } from '../hooks/useUser.jsx';
 import { PermissionGuard } from './Permission';
+import LoadingSpinner from './ui/LoadingSpinner';
+import ErrorAlert from './ui/ErrorAlert';
+import SuccessAlert from './ui/SuccessAlert';
 
 function RoleManagement({ token }) {
-  const [users, setUsers] = useState([]);
-  const [roles, setRoles] = useState([]);
-  const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedRole, setSelectedRole] = useState(null);
   const [showUserRoleModal, setShowUserRoleModal] = useState(false);
   const [showRolePermissionModal, setShowRolePermissionModal] = useState(false);
 
-  const { get, post, put, del, error, setError } = useApi(token);
+  const { post, del, error: apiError, setError: setApiError } = useApi(token);
 
-  useEffect(() => {
-    fetchData();
-  }, [token]);
+  // Fetch all required data in parallel
+  const { 
+    data: { users = [], roles = [], permissions = [] }, 
+    loading, 
+    error: fetchError, 
+    refetch 
+  } = useMultipleDataFetching(['/users', '/roles', '/permissions'], token);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [usersData, rolesData, permissionsData] = await Promise.all([
-        get('/users'),
-        get('/roles'),
-        get('/permissions')
-      ]);
-      setUsers(usersData);
-      setRoles(rolesData);
-      setPermissions(permissionsData);
-    } catch (err) {
-      console.error('Error fetching data:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const error = apiError || fetchError;
 
   const handleAssignRole = async (userId, roleName) => {
     try {
       await post(`/rbac/users/${userId}/roles`, { role: roleName });
       setSuccess(`Role ${roleName} assigned successfully!`);
-      fetchData(); // Refresh data
+      refetch(); // Refresh data
       setShowUserRoleModal(false);
     } catch (err) {
       console.error('Error assigning role:', err);
@@ -58,7 +46,7 @@ function RoleManagement({ token }) {
     try {
       await del(`/rbac/users/${userId}/roles/${roleName}`);
       setSuccess(`Role ${roleName} removed successfully!`);
-      fetchData(); // Refresh data
+      refetch(); // Refresh data
     } catch (err) {
       console.error('Error removing role:', err);
     }
@@ -78,7 +66,7 @@ function RoleManagement({ token }) {
       const response = await put(`/roles/${roleToUpdate.name}/permissions`, { permissions: permissionIds });
       console.log('Update response:', response);
       setSuccess('Role permissions updated successfully!');
-      fetchData(); // Refresh data
+      refetch(); // Refresh data
       setShowRolePermissionModal(false);
     } catch (err) {
       console.error('Error updating role permissions:', err);
@@ -88,10 +76,7 @@ function RoleManagement({ token }) {
   if (loading) {
     return (
       <div className="bg-white p-6 shadow-sm border border-gray-300">
-        <div className="flex items-center justify-center py-8">
-          <div className="spinner"></div>
-          <span className="ml-2 text-gray-600">Loading role management...</span>
-        </div>
+        <LoadingSpinner message="Loading role management..." />
       </div>
     );
   }
@@ -102,8 +87,8 @@ function RoleManagement({ token }) {
         Role Management
       </h3>
 
-      {error && <div className="alert-error mb-4">{error}</div>}
-      {success && <div className="alert-success mb-4">{success}</div>}
+      <ErrorAlert error={error} onClose={() => setApiError('')} />
+      <SuccessAlert message={success} onClose={() => setSuccess('')} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* User Role Assignments */}
