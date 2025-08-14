@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useMultipleDataFetching } from '../hooks/useDataFetching';
 import { useApi } from '../hooks/useApi';
-import { useUserPermissions } from '../hooks/useUser.jsx';
+import { useUserPermissions, getRoleDisplayName } from '../hooks/useUser.jsx';
 import Permission, { 
   PermissionGuard, 
   UserEditButton, 
@@ -192,7 +192,7 @@ function UserManagement({ token }) {
                     key={index}
                     className="inline-flex px-2 py-1 text-xs font-medium rounded-md bg-purple-100 text-purple-800"
                   >
-                    {hasPermission('view_roles') 
+                    {can('view_roles') 
                       ? getRoleDisplayName(role, roles)
                       : role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
                     }
