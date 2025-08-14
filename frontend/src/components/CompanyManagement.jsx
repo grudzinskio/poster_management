@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import ProtectedButton, { AddCompanyButton } from './ProtectedButton';
 
 function CompanyManagement({ token }) {
   const [companies, setCompanies] = useState([]);
@@ -135,18 +136,22 @@ function CompanyManagement({ token }) {
         <td className="table-cell">{company.name}</td>
         <td className="table-cell">
           <div className="flex flex-wrap gap-2">
-            <button
+            <ProtectedButton
+              permission="edit_company"
               className="btn-primary text-sm px-3 py-1.5"
               onClick={() => handleEditCompany(company)}
+              fallbackText="Cannot edit companies"
             >
               Edit
-            </button>
-            <button
+            </ProtectedButton>
+            <ProtectedButton
+              permission="delete_company"
               className="btn-danger text-sm px-3 py-1.5"
               onClick={() => handleDeleteCompany(company.id)}
+              fallbackText="Cannot delete companies"
             >
               Delete
-            </button>
+            </ProtectedButton>
           </div>
         </td>
       </tr>
@@ -172,7 +177,7 @@ function CompanyManagement({ token }) {
             className="form-input"
           />
         </div>
-        <button type="submit" className="btn-success">Add Company</button>
+        <AddCompanyButton type="submit" />
       </form>
 
       {error && <div className="alert-error">{error}</div>}

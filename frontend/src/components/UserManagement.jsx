@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
 import { useSimplePermissions, getRoleDisplayName } from '../hooks/useSimplePermissions.jsx';
 import PermissionGuard from './PermissionGuard';
+import ProtectedButton, { EditButton, DeleteButton, PasswordButton, AddUserButton } from './ProtectedButton';
 
 function UserManagement({ token }) {
   const [users, setUsers] = useState([]);
@@ -23,6 +24,7 @@ function UserManagement({ token }) {
   });
 
   const { get, post, put, del, error, setError } = useApi(token);
+  const { hasPermission } = useSimplePermissions();
 
   const fetchUsers = async () => {
     setError('');
@@ -44,6 +46,12 @@ function UserManagement({ token }) {
   };
 
   const fetchRoles = async () => {
+    // Only fetch roles if user has permission to view them
+    if (!hasPermission('view_roles')) {
+      console.log('User does not have view_roles permission, skipping role fetch');
+      return;
+    }
+    
     try {
       const data = await get('/roles');
       setRoles(data);
@@ -224,15 +232,20 @@ function UserManagement({ token }) {
                     key={index}
                     className="inline-flex px-2 py-1 text-xs font-medium rounded-md bg-purple-100 text-purple-800"
                   >
-                    {getRoleDisplayName(role, roles)}
+                    {hasPermission('view_roles') 
+                      ? getRoleDisplayName(role, roles)
+                      : role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                    }
                   </span>
                 ))
               ) : (
                 <span className="text-xs text-gray-500">No roles assigned</span>
               )}
-              <div className="text-xs text-gray-400 mt-1">
-                (Use Role Management to modify)
-              </div>
+              <PermissionGuard permission="manage_roles">
+                <div className="text-xs text-gray-400 mt-1">
+                  (Use Role Management to modify)
+                </div>
+              </PermissionGuard>
             </div>
           </td>
           <td className="table-cell">
@@ -247,12 +260,14 @@ function UserManagement({ token }) {
           </td>
           <td className="table-cell">
             <div className="flex gap-2 flex-wrap">
-              <button
+              <ProtectedButton
+                permission="edit_user"
                 className="btn-success text-sm px-3 py-1.5"
                 onClick={() => handleSaveEdit(user.id, editData)}
+                fallbackText="Cannot save user changes"
               >
                 Save
-              </button>
+              </ProtectedButton>
               <button
                 className="btn-secondary text-sm px-3 py-1.5"
                 onClick={() => setEditingId(null)}
@@ -287,7 +302,10 @@ function UserManagement({ token }) {
                   key={index}
                   className="inline-flex px-2 py-1 text-xs font-medium rounded-md bg-purple-100 text-purple-800"
                 >
-                  {getRoleDisplayName(role, roles)}
+                  {hasPermission('view_roles') 
+                    ? getRoleDisplayName(role, roles)
+                    : role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
+                  }
                 </span>
               ))
             ) : (
@@ -298,26 +316,9 @@ function UserManagement({ token }) {
         <td className="table-cell">{user.company_name || 'No Company'}</td>
         <td className="table-cell">
           <div className="flex gap-2 flex-wrap">
-            <button
-              className="btn-primary text-sm px-3 py-1.5"
-              onClick={() => handleEditUser(user)}
-            >
-              Edit
-            </button>
-            <button
-              className="btn-secondary text-sm px-3 py-1.5"
-              onClick={() => handleChangePassword(user.id)}
-            >
-              Password
-            </button>
-            <PermissionGuard permission="delete_user">
-              <button
-                className="btn-danger text-sm px-3 py-1.5"
-                onClick={() => handleDeleteUser(user.id)}
-              >
-                Delete
-              </button>
-            </PermissionGuard>
+            <EditButton onClick={() => handleEditUser(user)} />
+            <PasswordButton onClick={() => handleChangePassword(user.id)} />
+            <DeleteButton onClick={() => handleDeleteUser(user.id)} />
           </div>
         </td>
       </tr>
@@ -347,12 +348,14 @@ function UserManagement({ token }) {
       </td>
       <td className="table-cell">
         <div className="flex gap-2">
-          <button
+          <ProtectedButton
+            permission="edit_user"
             className="btn-success text-sm px-3 py-1.5"
             onClick={() => handleSavePassword(userId)}
+            fallbackText="Cannot change passwords"
           >
             Save Password
-          </button>
+          </ProtectedButton>
           <button
             className="btn-secondary text-sm px-3 py-1.5"
             onClick={handleCancelPasswordChange}
@@ -370,57 +373,57 @@ function UserManagement({ token }) {
         User Management
       </h3>
       
-      <form onSubmit={handleAddUser} className="bg-gray-50 p-6 mb-8 border border-gray-300">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New User</h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
-            <input
-              type="text"
-              name="username"
-              value={newUser.username}
-              onChange={handleNewUserChange}
-              placeholder="Username"
-              required
-              className="form-input"
-            />
+      <PermissionGuard permission="create_user">
+        <form onSubmit={handleAddUser} className="bg-gray-50 p-6 mb-8 border border-gray-300">
+          <h4 className="text-lg font-semibold text-gray-900 mb-4">Add New User</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username *</label>
+              <input
+                type="text"
+                name="username"
+                value={newUser.username}
+                onChange={handleNewUserChange}
+                placeholder="Username"
+                required
+                className="form-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
+              <input
+                type="password"
+                name="password"
+                value={newUser.password}
+                onChange={handleNewUserChange}
+                placeholder="Password"
+                required
+                className="form-input"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">User Type *</label>
+              <select name="user_type" value={newUser.user_type} onChange={handleNewUserChange} className="form-input cursor-pointer" required>
+                <option value="employee">Employee</option>
+                <option value="client">Client</option>
+                <option value="contractor">Contractor</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+              <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
+                <option value="">No Company</option>
+                {companies.map(company => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Password *</label>
-            <input
-              type="password"
-              name="password"
-              value={newUser.password}
-              onChange={handleNewUserChange}
-              placeholder="Password"
-              required
-              className="form-input"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">User Type *</label>
-            <select name="user_type" value={newUser.user_type} onChange={handleNewUserChange} className="form-input cursor-pointer" required>
-              <option value="employee">Employee</option>
-              <option value="client">Client</option>
-              <option value="contractor">Contractor</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
-            <select name="company_id" value={newUser.company_id} onChange={handleNewUserChange} className="form-input cursor-pointer">
-              <option value="">No Company</option>
-              {companies.map(company => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        <PermissionGuard permission="create_user">
-          <button type="submit" className="btn-success">Add User</button>
-        </PermissionGuard>
-      </form>
+          <AddUserButton type="submit" />
+        </form>
+      </PermissionGuard>
 
       {error && <div className="alert-error">{error}</div>}
       {success && <div className="alert-success">{success}</div>}

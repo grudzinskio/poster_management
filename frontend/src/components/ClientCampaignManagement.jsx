@@ -6,16 +6,8 @@ import { useApi } from '../hooks/useApi';
 function ClientCampaignManagement({ token, user }) {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-  const [newCampaign, setNewCampaign] = useState({
-    name: '',
-    description: '',
-    start_date: '',
-    end_date: ''
-  });
 
-  const { get, post, error, setError } = useApi(token);
+  const { get, error, setError } = useApi(token);
 
   const fetchCampaigns = async () => {
     setLoading(true);
@@ -34,36 +26,6 @@ function ClientCampaignManagement({ token, user }) {
   useEffect(() => {
     fetchCampaigns();
   }, [token]);
-
-  const handleInputChange = (e) => {
-    setNewCampaign({ ...newCampaign, [e.target.name]: e.target.value });
-    if (error) setError('');
-    if (success) setSuccess('');
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setError('');
-    setSuccess('');
-
-    try {
-      const createdCampaign = await post('/campaigns', newCampaign);
-      setCampaigns([createdCampaign, ...campaigns]);
-      setNewCampaign({
-        name: '',
-        description: '',
-        start_date: '',
-        end_date: ''
-      });
-      setSuccess('Campaign created successfully!');
-    } catch (err) {
-      console.error('Error creating campaign:', err);
-      // Error is already set by useApi hook
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   const formatDate = (dateString) => {
     if (!dateString) return 'Not set';
@@ -87,83 +49,7 @@ function ClientCampaignManagement({ token, user }) {
         Campaign Management - {user.company_name}
       </h3>
       
-      {/* Add Campaign Form */}
-      <div className="bg-gray-50 p-6 mb-8 border border-gray-300">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4">Create New Campaign</h4>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="name" className="form-label">
-              Campaign Name *
-            </label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              value={newCampaign.name}
-              onChange={handleInputChange}
-              required
-              placeholder="Enter campaign name"
-              className="form-input"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="description" className="form-label">
-              Description *
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              value={newCampaign.description}
-              onChange={handleInputChange}
-              required
-              placeholder="Describe your campaign goals, target audience, and requirements"
-              className="form-textarea"
-            />
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="start_date" className="form-label">
-                Start Date
-              </label>
-              <input
-                type="date"
-                id="start_date"
-                name="start_date"
-                value={newCampaign.start_date}
-                onChange={handleInputChange}
-                className="form-input"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="end_date" className="form-label">
-                End Date
-              </label>
-              <input
-                type="date"
-                id="end_date"
-                name="end_date"
-                value={newCampaign.end_date}
-                onChange={handleInputChange}
-                className="form-input"
-              />
-            </div>
-          </div>
-          
-          <button 
-            type="submit" 
-            className={`btn-success ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
-            disabled={submitting}
-          >
-            {submitting ? 'Creating...' : 'Create Campaign'}
-          </button>
-        </form>
-      </div>
-
       {error && <div className="alert-error">{error}</div>}
-      {success && <div className="alert-success">{success}</div>}
 
       {/* Campaigns List */}
       <div>
@@ -176,7 +62,7 @@ function ClientCampaignManagement({ token, user }) {
           </div>
         ) : campaigns.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
-            No campaigns found. Create your first campaign above!
+            No campaigns found for your company.
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

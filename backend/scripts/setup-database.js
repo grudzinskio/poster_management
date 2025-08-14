@@ -56,21 +56,11 @@ async function setupDatabase() {
       { permission: 'view_campaigns', description: 'View Campaigns' },
       { permission: 'create_campaign', description: 'Create Campaigns' },
       { permission: 'edit_campaign', description: 'Edit Campaigns' },
-      { permission: 'delete_campaign', description: 'Delete Campaigns' },
       { permission: 'assign_campaign', description: 'Assign Campaigns' },
       
-      // Role & System management
-      { permission: 'manage_roles', description: 'Manage Roles' },
-      { permission: 'view_roles', description: 'View Roles' },
-      { permission: 'system_admin', description: 'System Administration' },
-      { permission: 'view_reports', description: 'View Reports' },
-      { permission: 'manage_permissions', description: 'Manage Permissions' },
-      
-      // Advanced admin controls
-      { permission: 'database_backup', description: 'Database Backup' },
-      { permission: 'system_settings', description: 'System Settings' },
-      { permission: 'audit_logs', description: 'Audit Logs' },
-      { permission: 'emergency_access', description: 'Emergency Access' }
+      // Role and Permission management
+      { permission: 'manage_roles', description: 'Manage Roles and Permissions' },
+      { permission: 'view_roles', description: 'View Roles' }
     ];
     await knex('permissions').insert(permissions);
     console.log(`✅ Created ${permissions.length} permissions\n`);
@@ -91,9 +81,8 @@ async function setupDatabase() {
         permissions: [
           'view_users', 'create_user', 'edit_user', 'delete_user',
           'view_companies', 'create_company', 'edit_company', 'delete_company',
-          'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'assign_campaign',
-          'manage_roles', 'view_roles', 'manage_permissions',
-          'system_admin', 'view_reports', 'database_backup', 'system_settings', 'audit_logs', 'emergency_access'
+          'view_campaigns', 'create_campaign', 'edit_campaign', 'assign_campaign',
+          'manage_roles', 'view_roles'
         ] 
       },
       
@@ -103,9 +92,8 @@ async function setupDatabase() {
         permissions: [
           'view_users', 'create_user', 'edit_user',           // Can manage users but not delete
           'view_companies', 'create_company', 'edit_company', // Can manage companies but not delete
-          'view_campaigns', 'create_campaign', 'edit_campaign', 'delete_campaign', 'assign_campaign',
-          'view_roles',                                       // Can view roles but not manage
-          'view_reports'                                      // Can view reports
+          'view_campaigns', 'create_campaign', 'edit_campaign', 'assign_campaign',
+          'view_roles'                                        // Can view roles but not manage
         ] 
       },
       
@@ -132,7 +120,7 @@ async function setupDatabase() {
       { 
         role: 'client', 
         permissions: [
-          'view_campaigns', 'create_campaign', 'edit_campaign' // Campaign management only
+          'view_campaigns'                                    // View campaigns only
         ] 
       },
       

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
+import ProtectedButton, { AddCampaignButton } from './ProtectedButton';
 
 function EmployeeCampaignManagement({ token, user }) {
   const [campaigns, setCampaigns] = useState([]);
@@ -256,12 +257,14 @@ function EmployeeCampaignManagement({ token, user }) {
           </td>
           <td className="table-cell">
             <div className="flex flex-wrap gap-2">
-              <button
+              <ProtectedButton
+                permission="edit_campaign"
                 onClick={() => handleSaveEdit(campaign.id, editData)}
                 className="btn-success text-xs px-2 py-1"
+                tooltipText="You don't have permission to edit campaigns"
               >
                 Save
-              </button>
+              </ProtectedButton>
               <button
                 onClick={() => setEditingId(null)}
                 className="btn-secondary text-xs px-2 py-1"
@@ -340,18 +343,22 @@ function EmployeeCampaignManagement({ token, user }) {
         </td>
         <td className="table-cell">
           <div className="flex flex-wrap gap-2">
-            <button
+            <ProtectedButton
+              permission="edit_campaign"
               onClick={() => handleEditCampaign(campaign)}
               className="btn-primary text-xs px-2 py-1"
+              fallbackText="Cannot edit campaigns"
             >
               Edit
-            </button>
-            <button
+            </ProtectedButton>
+            <ProtectedButton
+              permission="assign_campaign"
               onClick={() => handleAssignContractors(campaign.id)}
               className="btn-secondary text-xs px-2 py-1"
+              fallbackText="Cannot assign contractors"
             >
               Assign
-            </button>
+            </ProtectedButton>
           </div>
         </td>
       </tr>
@@ -441,13 +448,15 @@ function EmployeeCampaignManagement({ token, user }) {
             </div>
           </div>
           
-          <button 
+          <ProtectedButton
+            permission="create_campaign"
             type="submit" 
             className={`btn-success ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={submitting}
+            fallbackText="Cannot create campaigns"
           >
             {submitting ? 'Creating...' : 'Create Campaign'}
-          </button>
+          </ProtectedButton>
         </form>
       </div>
 

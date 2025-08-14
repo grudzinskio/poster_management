@@ -153,11 +153,15 @@ export function getRoleDisplayName(roleName, allRoles = []) {
   const roleObj = allRoles.find(r => r.name === roleName);
   
   if (!roleObj) {
-    throw new Error(`Role '${roleName}' not found in database. API may not be working correctly.`);
+    // Instead of throwing an error, return a fallback display name
+    console.warn(`Role '${roleName}' not found in database. Using fallback display name.`);
+    return roleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
   
   if (!roleObj.description) {
-    throw new Error(`Role '${roleName}' has no description in database. Database setup may be incomplete.`);
+    // Instead of throwing an error, return the role name formatted nicely
+    console.warn(`Role '${roleName}' has no description in database. Using formatted role name.`);
+    return roleName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
   
   return roleObj.description;
@@ -169,11 +173,15 @@ export function getPermissionDisplayName(permission, allPermissions = []) {
   const permissionObj = allPermissions.find(p => p.permission === permission);
   
   if (!permissionObj) {
-    throw new Error(`Permission '${permission}' not found in database. API may not be working correctly.`);
+    // Instead of throwing an error, return a fallback display name
+    console.warn(`Permission '${permission}' not found in database. Using fallback display name.`);
+    return permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
   
   if (!permissionObj.description) {
-    throw new Error(`Permission '${permission}' has no description in database. Database setup may be incomplete.`);
+    // Instead of throwing an error, return the permission name formatted nicely
+    console.warn(`Permission '${permission}' has no description in database. Using formatted permission name.`);
+    return permission.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
   
   return permissionObj.description;
