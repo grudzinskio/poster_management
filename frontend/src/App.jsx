@@ -4,16 +4,17 @@
  * Main App Component - Poster Campaign Management System
  * 
  * This component serves as the root of the application and manages:
- * - User authentication and authorization
+ * - User authentication and authorization using new User system
  * - Role-based navigation and component rendering
  * - API communication with the backend server
  * - Global state management for campaigns and user data
+ * - Emphasizes User.user.can() method and permissions array for visual display
  * 
  * Technologies Used:
  * - React 18 with Hooks (useState, useEffect)
  * - Fetch API for HTTP requests
  * - JWT Token-based authentication
- * - Role-based access control (employee vs client)
+ * - DRY permission system with User.user.can() pattern
  */
 
 import { useState, useEffect } from 'react';
@@ -25,16 +26,16 @@ import ClientCampaignManagement from './components/ClientCampaignManagement';
 import EmployeeCampaignManagement from './components/EmployeeCampaignManagement';
 import ContractorCampaignManagement from './components/ContractorCampaignManagement';
 import SimplePermissionBox from './components/SimplePermissionBox';
-import PermissionGuard from './components/PermissionGuard';
-import { SimplePermissionsProvider, useSimplePermissions } from './hooks/useSimplePermissions.jsx';
+import { PermissionGuard } from './components/Permission';
+import { UserProvider, useUserPermissions } from './hooks/useUser.jsx';
 import './App.css';
 
 function AppContent({ onTokenChange }) {
   // Global State Management
   // error: Error message to display when API calls fail
   const [error, setError] = useState(null);
-  // user: Current authenticated user object containing username, role, company_name
-  const [user, setUser] = useState(null);
+  // basicUser: Basic user data from token for display purposes
+  const [basicUser, setBasicUser] = useState(null);
   // token: JWT authentication token for API requests
   const [token, setToken] = useState(null);
   // showLogin: Boolean to control login/main app view
@@ -42,8 +43,8 @@ function AppContent({ onTokenChange }) {
   // activeTab: Controls which management interface is displayed for employees
   const [activeTab, setActiveTab] = useState('campaigns');
 
-  // Get permissions context
-  const { hasPermission } = useSimplePermissions();
+  // Get permissions context using new User system - emphasizes User.user.can() method
+  const { user, can } = useUserPermissions();
 
   /**
    * Event Handler: Successful Login
@@ -56,42 +57,38 @@ function AppContent({ onTokenChange }) {
    * @param {string} loginData.token - JWT authentication token
    */
   const handleLogin = (loginData) => {
-    setUser(loginData.user);
+    setBasicUser(loginData.user);
     setToken(loginData.token);
     onTokenChange(loginData.token); // Update parent component's token
     setShowLogin(false);
   };
 
-  // Helper function to check if user has a specific role
+  // Helper function to check if user has a specific role - uses User.user.hasRole() pattern
   const hasRole = (roleName) => {
-    return user && user.roles && user.roles.some(role => 
-      typeof role === 'string' ? role === roleName : role.name === roleName
-    );
+    return user?.hasRole(roleName) ?? false;
   };
 
   // Helper function to get role names as string
   const getRoleNames = () => {
     if (!user || !user.roles) return 'No roles';
-    return user.roles.map(role => 
-      typeof role === 'string' ? role : role.name
-    ).join(', ');
+    return user.roles.join(', ');
   };
 
-  // Set default tab based on permissions
+  // Set default tab based on permissions using User.user.can() method
   useEffect(() => {
     if (user && !showLogin) {
       // Priority order: campaigns, users, companies, roles
-      if (hasPermission('view_campaigns')) {
+      if (user.can('view_campaigns')) {
         setActiveTab('campaigns');
-      } else if (hasPermission('view_users')) {
+      } else if (user.can('view_users')) {
         setActiveTab('users');
-      } else if (hasPermission('view_companies')) {
+      } else if (user.can('view_companies')) {
         setActiveTab('companies');
-      } else if (hasPermission('manage_roles')) {
+      } else if (user.can('manage_roles')) {
         setActiveTab('roles');
       }
     }
-  }, [user, showLogin, hasPermission]);
+  }, [user, showLogin]);
 
   /**
    * Event Handler: User Logout
@@ -100,7 +97,7 @@ function AppContent({ onTokenChange }) {
    * Security best practice: Clear all sensitive data from memory
    */
   const handleLogout = () => {
-    setUser(null);
+    setBasicUser(null);
     setToken(null);
     onTokenChange(null); // Clear parent component's token
     setError(null);
@@ -113,7 +110,7 @@ function AppContent({ onTokenChange }) {
     return <Login onLogin={handleLogin} />;
   }
 
-  // Main Application UI - Permission-Based Interface
+  // Main Application UI - Permission-Based Interface using User.user.can() method
   return (
     <div className="app-background min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Application Header - Common for all authenticated users */}
@@ -121,20 +118,18 @@ function AppContent({ onTokenChange }) {
         <h1 className="text-3xl font-bold text-gray-900">Poster Campaigns</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">
-            Welcome, {user.username} ({user.user_type || 'unknown'}) - {getRoleNames()}
-            {user.company_name && ` - ${user.company_name}`}
+            Welcome, {user?.username || basicUser?.username} ({user?.user_type || basicUser?.user_type || 'unknown'}) - {getRoleNames()}
+            {(user?.company_name || basicUser?.company_name) && ` - ${user?.company_name || basicUser?.company_name}`}
           </span>
           <SimplePermissionBox />
-          <button onClick={handleLogout} className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-transparent rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500">
+          <button onClick={handleLogout} className="inline-flex items-center justify-center px-3 py-1.5 text-sm border border-red-600 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed bg-red-600 text-white hover:bg-red-700 focus:ring-red-500">
             Logout
           </button>
         </div>
       </header>
 
-      {/* Permission Status Box - Removed since it's now in header */}
-
       <main>
-        {/* Permission-Based Navigation */}
+        {/* Permission-Based Navigation using User.user.can() method */}
         {/* Show navigation tabs if user has any management permissions */}
         <PermissionGuard permission={["view_campaigns", "view_users", "view_companies", "manage_roles"]}>
           <div className="flex gap-4 mb-8 border-b border-gray-200">
@@ -143,8 +138,8 @@ function AppContent({ onTokenChange }) {
               <button 
                 className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'campaigns' 
-                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                    : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                    ? 'border-gray-800 text-gray-800 bg-gray-100' 
+                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                 }`}
                 onClick={() => setActiveTab('campaigns')}
               >
@@ -156,8 +151,8 @@ function AppContent({ onTokenChange }) {
               <button 
                 className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'users' 
-                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                    : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                    ? 'border-gray-800 text-gray-800 bg-gray-100' 
+                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                 }`}
                 onClick={() => setActiveTab('users')}
               >
@@ -169,8 +164,8 @@ function AppContent({ onTokenChange }) {
               <button 
                 className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'companies' 
-                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                    : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                    ? 'border-gray-800 text-gray-800 bg-gray-100' 
+                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                 }`}
                 onClick={() => setActiveTab('companies')}
               >
@@ -182,8 +177,8 @@ function AppContent({ onTokenChange }) {
               <button 
                 className={`px-6 py-3 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'roles' 
-                    ? 'border-blue-600 text-blue-600 bg-blue-50' 
-                    : 'border-transparent text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+                    ? 'border-gray-800 text-gray-800 bg-gray-100' 
+                    : 'border-transparent text-gray-500 hover:text-gray-800 hover:bg-gray-50'
                 }`}
                 onClick={() => setActiveTab('roles')}
               >
@@ -193,7 +188,7 @@ function AppContent({ onTokenChange }) {
           </div>
         </PermissionGuard>
 
-        {/* Management Interfaces Based on Permissions */}
+        {/* Management Interfaces Based on Permissions using User.user.can() method */}
         <PermissionGuard permission="view_users">
           {activeTab === 'users' && <UserManagement token={token} />}
         </PermissionGuard>
@@ -210,21 +205,21 @@ function AppContent({ onTokenChange }) {
         {/* Employee Campaign Management - Permission-based access */}
         <PermissionGuard permission="view_campaigns">
           {activeTab === 'campaigns' && !hasRole('client') && !hasRole('contractor') && (
-            <EmployeeCampaignManagement token={token} user={user} />
+            <EmployeeCampaignManagement token={token} user={user || basicUser} />
           )}
         </PermissionGuard>
         
         {/* Client Interface - Role-based since it's specific business logic */}
-        {hasRole('client') && <ClientCampaignManagement token={token} user={user} />}
+        {hasRole('client') && <ClientCampaignManagement token={token} user={user || basicUser} />}
         
         {/* Contractor Interface - Role-based since it's specific business logic */}
-        {hasRole('contractor') && <ContractorCampaignManagement token={token} user={user} />}
+        {hasRole('contractor') && <ContractorCampaignManagement token={token} user={user || basicUser} />}
 
-        {/* Fallback for users without any permissions */}
-        {!hasPermission('view_campaigns') && 
-         !hasPermission('view_users') && 
-         !hasPermission('view_companies') && 
-         !hasPermission('manage_roles') && 
+        {/* Fallback for users without any permissions - uses User.user.can() method */}
+        {!can('view_campaigns') && 
+         !can('view_users') && 
+         !can('view_companies') && 
+         !can('manage_roles') && 
          !hasRole('client') && 
          !hasRole('contractor') && (
           <div className="bg-white p-6 shadow-sm border border-gray-300 text-center">
@@ -233,6 +228,10 @@ function AppContent({ onTokenChange }) {
               You don't have permissions to access any management functions. 
               Please contact your administrator to request appropriate permissions.
             </p>
+            <div className="mt-4 text-sm text-gray-500">
+              <strong>Debug Info:</strong> No permissions found for this user. 
+              Expected permissions: view_campaigns, view_users, view_companies, or manage_roles.
+            </div>
           </div>
         )}
       </main>
@@ -244,9 +243,9 @@ function App() {
   const [token, setToken] = useState(null);
   
   return (
-    <SimplePermissionsProvider token={token}>
+    <UserProvider token={token}>
       <AppContent onTokenChange={setToken} />
-    </SimplePermissionsProvider>
+    </UserProvider>
   );
 }
 

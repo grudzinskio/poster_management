@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-import ProtectedButton, { AddCompanyButton } from './ProtectedButton';
+import { PermissionGuard } from './Permission';
+import Permission, { CompanyCreateButton } from './Permission';
 
 function CompanyManagement({ token }) {
   const [companies, setCompanies] = useState([]);
@@ -136,22 +137,26 @@ function CompanyManagement({ token }) {
         <td className="table-cell">{company.name}</td>
         <td className="table-cell">
           <div className="flex flex-wrap gap-2">
-            <ProtectedButton
+            <Permission
+              as="button"
               permission="edit_company"
-              className="btn-primary text-sm px-3 py-1.5"
+              variant="primary"
+              size="sm"
               onClick={() => handleEditCompany(company)}
-              fallbackText="Cannot edit companies"
+              disabledText="Cannot edit companies"
             >
               Edit
-            </ProtectedButton>
-            <ProtectedButton
+            </Permission>
+            <Permission
+              as="button"
               permission="delete_company"
-              className="btn-danger text-sm px-3 py-1.5"
+              variant="danger"
+              size="sm"
               onClick={() => handleDeleteCompany(company.id)}
-              fallbackText="Cannot delete companies"
+              disabledText="Cannot delete companies"
             >
               Delete
-            </ProtectedButton>
+            </Permission>
           </div>
         </td>
       </tr>
@@ -169,6 +174,7 @@ function CompanyManagement({ token }) {
           <input
             type="text"
             id="name"
+            
             name="name"
             value={newCompany.name}
             onChange={handleNewCompanyChange}
@@ -177,7 +183,7 @@ function CompanyManagement({ token }) {
             className="form-input"
           />
         </div>
-        <AddCompanyButton type="submit" />
+        <CompanyCreateButton type="submit" />
       </form>
 
       {error && <div className="alert-error">{error}</div>}

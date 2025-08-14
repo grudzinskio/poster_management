@@ -2,7 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-import ProtectedButton, { AddCampaignButton } from './ProtectedButton';
+import { PermissionGuard } from './Permission';
+import Permission, { CampaignCreateButton } from './Permission';
 
 function EmployeeCampaignManagement({ token, user }) {
   const [campaigns, setCampaigns] = useState([]);
@@ -257,14 +258,16 @@ function EmployeeCampaignManagement({ token, user }) {
           </td>
           <td className="table-cell">
             <div className="flex flex-wrap gap-2">
-              <ProtectedButton
+              <Permission
+                as="button"
                 permission="edit_campaign"
                 onClick={() => handleSaveEdit(campaign.id, editData)}
-                className="btn-success text-xs px-2 py-1"
-                tooltipText="You don't have permission to edit campaigns"
+                variant="success"
+                size="sm"
+                disabledText="You don't have permission to edit campaigns"
               >
                 Save
-              </ProtectedButton>
+              </Permission>
               <button
                 onClick={() => setEditingId(null)}
                 className="btn-secondary text-xs px-2 py-1"
@@ -343,22 +346,26 @@ function EmployeeCampaignManagement({ token, user }) {
         </td>
         <td className="table-cell">
           <div className="flex flex-wrap gap-2">
-            <ProtectedButton
+            <Permission
+              as="button"
               permission="edit_campaign"
               onClick={() => handleEditCampaign(campaign)}
-              className="btn-primary text-xs px-2 py-1"
-              fallbackText="Cannot edit campaigns"
+              variant="primary"
+              size="sm"
+              disabledText="Cannot edit campaigns"
             >
               Edit
-            </ProtectedButton>
-            <ProtectedButton
+            </Permission>
+            <Permission
+              as="button"
               permission="assign_campaign"
               onClick={() => handleAssignContractors(campaign.id)}
-              className="btn-secondary text-xs px-2 py-1"
-              fallbackText="Cannot assign contractors"
+              variant="secondary"
+              size="sm"
+              disabledText="Cannot assign contractors"
             >
               Assign
-            </ProtectedButton>
+            </Permission>
           </div>
         </td>
       </tr>
@@ -448,15 +455,16 @@ function EmployeeCampaignManagement({ token, user }) {
             </div>
           </div>
           
-          <ProtectedButton
+          <Permission
+            as="button"
             permission="create_campaign"
             type="submit" 
-            className={`btn-success ${submitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+            variant="success"
             disabled={submitting}
-            fallbackText="Cannot create campaigns"
+            disabledText="Cannot create campaigns"
           >
             {submitting ? 'Creating...' : 'Create Campaign'}
-          </ProtectedButton>
+          </Permission>
         </form>
       </div>
 

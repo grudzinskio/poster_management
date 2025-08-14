@@ -1,18 +1,36 @@
 // components/SimplePermissionBox.jsx
-// Small icon-based component to display user permissions
+// Small icon-based component to display user permissions using new User system
 
 import React, { useState } from 'react';
-import { useSimplePermissions, getCategoryDisplayName } from '../hooks/useSimplePermissions.jsx';
+import { useUserPermissions, getCategoryDisplayName } from '../hooks/useUser.jsx';
 
 function SimplePermissionBox() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { 
-    userPermissions, 
-    getMissingPermissionsByCategory,
+    user,
+    getPermissions,
+    getMissingPermissions,
+    getPermissionsByCategory,
     getPermissionDisplayName,
     loading, 
     error 
-  } = useSimplePermissions();
+  } = useUserPermissions();
+
+  // Get permissions data using new User system
+  const userPermissions = getPermissions();
+  const missingPermissions = getMissingPermissions();
+  
+  // Create missing permissions by category for compatibility
+  const getMissingPermissionsByCategory = () => {
+    const missingByCategory = {
+      users: missingPermissions.filter(p => p.includes('user')),
+      companies: missingPermissions.filter(p => p.includes('compan')),
+      campaigns: missingPermissions.filter(p => p.includes('campaign')),
+      roles: missingPermissions.filter(p => p.includes('role')),
+      system: missingPermissions.filter(p => p.includes('system') || p.includes('admin') || p.includes('report'))
+    };
+    return missingByCategory;
+  };
 
   if (loading) {
     return (
@@ -49,6 +67,7 @@ function SimplePermissionBox() {
     );
   }
 
+  // Use the new User system to get missing permissions by category
   const missingByCategory = getMissingPermissionsByCategory();
   const hasAnyMissingPermissions = Object.values(missingByCategory).some(perms => perms.length > 0);
   

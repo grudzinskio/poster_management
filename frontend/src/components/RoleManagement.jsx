@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useApi } from '../hooks/useApi';
-import { getRoleDisplayName } from '../hooks/useSimplePermissions.jsx';
-import PermissionGuard from './PermissionGuard';
+import { getRoleDisplayName } from '../hooks/useUser.jsx';
+import { PermissionGuard } from './Permission';
 
 function RoleManagement({ token }) {
   const [users, setUsers] = useState([]);
