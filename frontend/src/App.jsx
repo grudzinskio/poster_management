@@ -68,11 +68,29 @@ function AppContent({ onTokenChange }) {
     return user?.hasRole(roleName) ?? false;
   };
 
-  // Helper function to get role names as string
+  // Helper function to get role names as human-readable string
   const getRoleNames = () => {
     if (!user || !user.roles) return 'No roles';
-    return user.roles.join(', ');
-  };
+    if (Array.isArray(user.roles)) {
+      return user.roles.map(role => {
+        // If role is an object, try to use .name or .description
+        if (typeof role === 'object' && role !== null) {
+          if (role.description) return role.description;
+          if (role.name) return String(role.name).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          return JSON.stringify(role);
+        }
+        if (typeof role === 'string') {
+          // Try to use user.getRoleDisplayName if available
+          if (typeof user.getRoleDisplayName === 'function') {
+            return user.getRoleDisplayName(role);
+          }
+          return role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+        return String(role);
+      }).join(', ');
+    }
+    return String(user.roles);
+  }
 
   // Set default tab based on permissions using User.user.can() method
   useEffect(() => {
@@ -118,7 +136,22 @@ function AppContent({ onTokenChange }) {
         <h1 className="text-3xl font-bold text-gray-900">Poster Campaigns</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm text-gray-600">
-            Welcome, {user?.username || basicUser?.username} ({user?.user_type || basicUser?.user_type || 'unknown'}) - {getRoleNames()}
+            Welcome, {user?.username || basicUser?.username} ({user?.user_type || basicUser?.user_type || 'unknown'})
+            {' - '}
+            {user ? getRoleNames() : (basicUser?.roles ? Array.isArray(basicUser.roles) ? basicUser.roles.map(role => {
+              if (typeof role === 'object' && role !== null) {
+                if (role.description) return role.description;
+                if (role.name) return String(role.name).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                return JSON.stringify(role);
+              }
+              if (typeof role === 'string') {
+                if (typeof basicUser.getRoleDisplayName === 'function') {
+                  return basicUser.getRoleDisplayName(role);
+                }
+                return role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+              }
+              return String(role);
+            }).join(', ') : String(basicUser.roles) : 'No roles')}
             {(user?.company_name || basicUser?.company_name) && ` - ${user?.company_name || basicUser?.company_name}`}
           </span>
           <SimplePermissionBox />

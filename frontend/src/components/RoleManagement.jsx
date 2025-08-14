@@ -1,7 +1,7 @@
 // components/RoleManagement.jsx
 // Role management interface for super admins only
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useMultipleDataFetching } from '../hooks/useDataFetching';
 import { useApi } from '../hooks/useApi';
 import { getRoleDisplayName } from '../hooks/useUser.jsx';
@@ -17,7 +17,7 @@ function RoleManagement({ token }) {
   const [showUserRoleModal, setShowUserRoleModal] = useState(false);
   const [showRolePermissionModal, setShowRolePermissionModal] = useState(false);
 
-  const { post, del, error: apiError, setError: setApiError } = useApi(token);
+  const { post, put, del, error: apiError, setError: setApiError } = useApi(token);
 
   // Fetch all required data in parallel
   const { 

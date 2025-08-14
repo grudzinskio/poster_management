@@ -120,19 +120,19 @@ async function createUser(req, res) {
  */
 async function updateUser(req, res) {
   const { id } = req.params;
-  const { username, user_type, roles, company_id } = req.body;
-  
-  if (!username || !user_type || !roles || !Array.isArray(roles) || roles.length === 0) {
-    return res.status(400).json({ error: 'Username, user_type, and at least one role are required' });
+  const { username, user_type, company_id } = req.body;
+
+  if (!username || !user_type) {
+    return res.status(400).json({ error: 'Username and user_type are required' });
   }
-  
+
   // Validate user_type
   if (!['employee', 'client', 'contractor'].includes(user_type)) {
     return res.status(400).json({ error: 'user_type must be one of: employee, client, contractor' });
   }
-  
+
   const trx = await knex.transaction();
-  
+
   try {
     // Update user basic information
     const affectedRows = await trx('users')
@@ -142,43 +142,19 @@ async function updateUser(req, res) {
         user_type,
         company_id: company_id || null
       });
-    
+
     if (affectedRows === 0) {
       await trx.rollback();
       return res.status(404).json({ error: 'User not found' });
     }
-    
-    // Get role IDs for the provided role names
-    const roleRecords = await trx('roles')
-      .whereIn('name', roles)
-      .select('id', 'name');
-    
-    if (roleRecords.length !== roles.length) {
-      await trx.rollback();
-      return res.status(400).json({ error: 'One or more invalid roles provided' });
-    }
-    
-    // Remove existing role assignments
-    await trx('user_roles').where('user', id).del();
-    
-    // Assign new roles to user
-    const userRoleInserts = roleRecords.map(role => ({
-      user: id,
-      role: role.id
-    }));
-    
-    await trx('user_roles').insert(userRoleInserts);
-    
+
     // Retrieve the updated user with company information
     const user = await trx('users as u')
       .leftJoin('companies as c', 'u.company_id', 'c.id')
       .select('u.id', 'u.username', 'u.user_type', 'u.company_id', 'c.name as company_name')
       .where('u.id', id)
       .first();
-    
-    // Add roles to the response
-    user.roles = roles;
-    
+
     await trx.commit();
     res.json(user);
   } catch (error) {
