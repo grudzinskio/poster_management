@@ -32,8 +32,6 @@ import './App.css';
 
 function AppContent({ onTokenChange }) {
   // Global State Management
-  // error: Error message to display when API calls fail
-  const [error, setError] = useState(null);
   // basicUser: Basic user data from token for display purposes
   const [basicUser, setBasicUser] = useState(null);
   // token: JWT authentication token for API requests
@@ -118,7 +116,6 @@ function AppContent({ onTokenChange }) {
     setBasicUser(null);
     setToken(null);
     onTokenChange(null); // Clear parent component's token
-    setError(null);
     setShowLogin(true);
     setActiveTab('campaigns');
   };
