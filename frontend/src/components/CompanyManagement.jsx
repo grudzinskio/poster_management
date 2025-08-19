@@ -49,16 +49,20 @@ function CompanyManagement({ token }) {
   };
 
   const handleSaveEdit = async (companyId, updatedData) => {
-    setError('');
+    setApiError(''); // Fixed: was setError('')
     setSuccess('');
+    console.log('[CompanyManagement] Saving company edit:', companyId, updatedData);
     
     try {
       const data = await put(`/companies/${companyId}`, updatedData);
+      console.log('[CompanyManagement] Save response:', data);
       setEditingId(null);
       setSuccess('Company updated successfully!');
       refetch(); // Use refetch instead of manual state update
     } catch (err) {
+      console.error('[CompanyManagement] Save error:', err);
       // Error is already set by useApi hook
+      // Keep editing mode open on error
     }
   };
 
@@ -103,7 +107,11 @@ function CompanyManagement({ token }) {
             <div className="flex flex-wrap gap-2">
               <button
                 className="btn-success text-sm px-3 py-1.5"
-                onClick={() => handleSaveEdit(company.id, editData)}
+                onClick={() => {
+                  console.log('[CompanyManagement] Save button clicked:', company.id, editData);
+                  handleSaveEdit(company.id, editData);
+                }}
+                disabled={!editData.name.trim()} // Prevent saving empty names
               >
                 Save
               </button>
@@ -162,7 +170,6 @@ function CompanyManagement({ token }) {
           <input
             type="text"
             id="name"
-            
             name="name"
             value={newCompany.name}
             onChange={handleNewCompanyChange}
@@ -202,4 +209,3 @@ function CompanyManagement({ token }) {
 }
 
 export default CompanyManagement;
-
