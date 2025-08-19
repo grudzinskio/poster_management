@@ -58,19 +58,20 @@ async function login(req, res) {
 
     // Generate JWT token
     const roles = await getUserRoles(user.id);
+    const roleNames = roles.map(r => r.name); // get array of role names
     const token = generateToken({
       id: user.id,
       username: user.username,
-      roles: roles,
+      roles: roleNames,
       company_id: user.company_id
     });
-    
+
     // Return success response with token and user info
     res.json({
       token,
       user: {
         ...user.toJSON(),
-        roles: roles
+        roles: roleNames
       }
     });
   } catch (error) {
