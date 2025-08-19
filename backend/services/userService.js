@@ -224,8 +224,17 @@ async function updateUser(userId, updateData) {
  * @param {number} roleId - Role ID
  * @returns {Promise<boolean>} - Success status
  */
+
 async function assignRole(userId, roleId) {
   try {
+    // Check if role already assigned
+    const exists = await knex('user_roles')
+      .where({ user: userId, role: roleId })
+      .first();
+    if (exists) {
+      // Role already assigned
+      return 'already_assigned';
+    }
     await knex('user_roles').insert({
       user: userId,
       role: roleId

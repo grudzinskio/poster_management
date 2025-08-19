@@ -47,7 +47,7 @@ router.post('/', authenticateToken, requirePermission('create_user'), createUser
  * Params: id (user ID)
  * Body: { username, roles: [string], company_id? }
  */
-router.put('/:id', authenticateToken, requirePermission('edit_user'), updateUser);
+router.put('/:id', authenticateToken, updateUser);
 
 /**
  * PUT /api/users/:id/password - Update user password

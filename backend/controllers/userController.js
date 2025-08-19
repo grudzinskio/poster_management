@@ -118,9 +118,11 @@ async function createUser(req, res) {
  * Params: id (user ID)
  * Body: { username, user_type, roles: [string], company_id? }
  */
+
 async function updateUser(req, res) {
   const { id } = req.params;
   const { username, user_type, company_id } = req.body;
+  const currentUserId = req.user.id;
 
   if (!username || !user_type) {
     return res.status(400).json({ error: 'Username and user_type are required' });
@@ -129,6 +131,18 @@ async function updateUser(req, res) {
   // Validate user_type
   if (!['employee', 'client', 'contractor'].includes(user_type)) {
     return res.status(400).json({ error: 'user_type must be one of: employee, client, contractor' });
+  }
+
+
+  // Only allow user to update their own profile, unless they have edit_user permission
+  if (parseInt(id) !== currentUserId) {
+    let hasPermission = false;
+    if (req.userInstance && typeof req.userInstance.can === 'function') {
+      hasPermission = await req.userInstance.can('edit_user');
+    }
+    if (!hasPermission) {
+      return res.status(403).json({ error: 'You do not have permission to update other users.' });
+    }
   }
 
   const trx = await knex.transaction();

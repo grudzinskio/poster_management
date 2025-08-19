@@ -176,10 +176,11 @@ async function assignUserRole(req, res) {
     }
     
     // Assign role
-    const success = await assignRole(parseInt(userId), roleRecord.id);
-    
-    if (success) {
+    const result = await assignRole(parseInt(userId), roleRecord.id);
+    if (result === true) {
       res.json({ message: `Role ${role} assigned to user successfully` });
+    } else if (result === 'already_assigned') {
+      res.status(400).json({ error: 'Role already assigned to user' });
     } else {
       res.status(400).json({ error: 'Failed to assign role' });
     }
