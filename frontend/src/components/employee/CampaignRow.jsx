@@ -36,11 +36,21 @@ function CampaignRow({
 
   const handleSaveEdit = async () => {
     setError('');
-    
+    // Ensure name and description are present
+    if (!editData.name || !editData.description) {
+      setError('Name and description are required.');
+      return;
+    }
     try {
       await put(`/campaigns/${campaign.id}`, editData);
       onEditComplete('Campaign updated successfully!');
     } catch (err) {
+      // Show backend error if available
+      if (err && err.message) {
+        setError(err.message);
+      } else {
+        setError('Failed to update campaign.');
+      }
       console.error('Error updating campaign:', err);
     }
   };
@@ -51,6 +61,14 @@ function CampaignRow({
   if (isEditing) {
     return (
       <>
+        {/* Show error if present */}
+        {error && (
+          <tr>
+            <td colSpan="8" className="table-cell text-red-600 bg-red-50 p-2">
+              {error}
+            </td>
+          </tr>
+        )}
         <tr className="editing-row">
           <td className="table-cell">{campaign.id}</td>
           <td className="table-cell">

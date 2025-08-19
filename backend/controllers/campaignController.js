@@ -11,6 +11,7 @@ const knex = require('../config/knex');
  * - Contractors: Only see campaigns assigned to them that are in progress
  */
 async function getAllCampaigns(req, res) {
+  console.log('[API] GET /api/campaigns called by user:', req.user?.username || req.user?.id);
   try {
     let query = knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
@@ -47,6 +48,7 @@ async function getAllCampaigns(req, res) {
  * Only contractors can access this endpoint to see their completed work
  */
 async function getCompletedCampaigns(req, res) {
+  console.log('[API] GET /api/campaigns/completed called by user:', req.user?.username || req.user?.id);
   // Check if user has contractor role
   const userRoles = req.user.roles || [];
   const hasContractorRole = userRoles.some(role => role.name === 'contractor' || role === 'contractor');
@@ -81,6 +83,7 @@ async function getCompletedCampaigns(req, res) {
  * - Employees: Must specify company_id in request body
  */
 async function createCampaign(req, res) {
+  console.log('[API] POST /api/campaigns called by user:', req.user?.username || req.user?.id, 'body:', req.body);
   const { name, description, start_date, end_date } = req.body;
   
   if (!name || !description) {
@@ -128,6 +131,7 @@ async function createCampaign(req, res) {
  * Only employees can update campaign details
  */
 async function updateCampaign(req, res) {
+  console.log('[API] PUT /api/campaigns/:id called by user:', req.user?.username || req.user?.id, 'params:', req.params, 'body:', req.body);
   const { id } = req.params;
   const { name, description, start_date, end_date, company_id } = req.body;
   
@@ -150,23 +154,33 @@ async function updateCampaign(req, res) {
     const finalCompanyId = company_id || existingCampaign.company_id;
     
     // Update campaign
-    await knex('campaigns')
+    // Build update object, include status if provided
+    const updateObj = {
+      name,
+      description,
+      start_date: start_date || null,
+      end_date: end_date || null,
+      company_id: finalCompanyId
+    };
+    if (typeof req.body.status !== 'undefined') {
+      updateObj.status = req.body.status;
+    }
+
+    const affectedRows = await knex('campaigns')
       .where('id', id)
-      .update({
-        name,
-        description,
-        start_date: start_date || null,
-        end_date: end_date || null,
-        company_id: finalCompanyId
-      });
-    
+      .update(updateObj);
+
+    console.log('[DB] updateCampaign affectedRows:', affectedRows);
+
     // Retrieve the updated campaign with company information
     const campaign = await knex('campaigns as c')
       .join('companies as co', 'c.company_id', 'co.id')
       .select('c.id', 'c.name', 'c.description', 'c.status', 'c.start_date', 'c.end_date', 'c.company_id', 'co.name as company_name')
       .where('c.id', id)
       .first();
-    
+
+    console.log('[DB] updateCampaign updated campaign:', campaign);
+
     res.json(campaign);
   } catch (error) {
     console.error('Error updating campaign:', error);
@@ -181,6 +195,7 @@ async function updateCampaign(req, res) {
  * Only employees can change campaign status
  */
 async function updateCampaignStatus(req, res) {
+  console.log('[API] PUT /api/campaigns/:id/status called by user:', req.user?.username || req.user?.id, 'params:', req.params, 'body:', req.body);
   const { id } = req.params;
   const { status } = req.body;
   
@@ -217,6 +232,7 @@ async function updateCampaignStatus(req, res) {
  * Only employees can assign contractors
  */
 async function assignContractors(req, res) {
+  console.log('[API] POST /api/campaigns/:id/assign called by user:', req.user?.username || req.user?.id, 'params:', req.params, 'body:', req.body);
   const { id } = req.params;
   const { contractor_ids } = req.body;
 
@@ -257,6 +273,7 @@ async function assignContractors(req, res) {
  * Contractors can only update from 'approved' to 'in_progress' and from 'in_progress' to 'completed'
  */
 async function updateCampaignStatusByContractor(req, res) {
+  console.log('[API] PUT /api/campaigns/:id/contractor-status called by user:', req.user?.username || req.user?.id, 'params:', req.params, 'body:', req.body);
   const { id } = req.params;
   const { status } = req.body;
   
@@ -309,6 +326,7 @@ async function updateCampaignStatusByContractor(req, res) {
 
 // Get campaigns assigned to the current contractor
 const getContractorCampaigns = async (req, res) => {
+  console.log('[API] GET /api/campaigns/contractor called by user:', req.user?.username || req.user?.id);
   try {
     // Check if user has contractor role
     const userRoles = req.user.roles || [];
