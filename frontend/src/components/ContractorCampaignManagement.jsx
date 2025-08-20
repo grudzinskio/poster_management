@@ -11,6 +11,7 @@ function ContractorCampaignManagement({ token, user }) {
   const [showCompleted, setShowCompleted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState({});
+  const [uploadedFiles, setUploadedFiles] = useState({});
   
   const { get, put, post, error: apiError, setError: setApiError } = useApi(token);
   
@@ -64,8 +65,23 @@ function ContractorCampaignManagement({ token, user }) {
   };
 
   // Image upload handler
+  // Allow adding files to selection without resetting
   const handleFileChange = (campaignId, files) => {
-    setSelectedFiles({ ...selectedFiles, [campaignId]: files });
+    setSelectedFiles(prev => {
+      const prevFiles = prev[campaignId] ? Array.from(prev[campaignId]) : [];
+      // Avoid duplicates by name (can be improved for real-world use)
+      const newFiles = Array.from(files);
+      const combined = [...prevFiles, ...newFiles].filter((file, idx, arr) => arr.findIndex(f => f.name === file.name) === idx);
+      return { ...prev, [campaignId]: combined };
+    });
+  };
+  // Remove a file from selectedFiles
+  const handleRemoveSelectedFile = (campaignId, fileName) => {
+    setSelectedFiles(prev => {
+      const files = Array.from(prev[campaignId] || []);
+      const filtered = files.filter(f => f.name !== fileName);
+      return { ...prev, [campaignId]: filtered };
+    });
   };
 
   const handleUpload = async (campaignId) => {
@@ -79,6 +95,14 @@ function ContractorCampaignManagement({ token, user }) {
       });
       await post(`/campaigns/${campaignId}/images`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
       setSelectedFiles({ ...selectedFiles, [campaignId]: null });
+      // Add uploaded files to uploadedFiles state
+      setUploadedFiles(prev => {
+        const prevFiles = prev[campaignId] || [];
+        return {
+          ...prev,
+          [campaignId]: [...prevFiles, ...Array.from(selectedFiles[campaignId])]
+        };
+      });
       refetchCampaigns(); // Use refetch instead of fetchCampaigns
     } catch (err) {
       setApiError('Failed to upload images');
@@ -172,9 +196,40 @@ function ContractorCampaignManagement({ token, user }) {
                 <input
                   type="file"
                   multiple
+                  id={`file-upload-${campaign.id}`}
+                  style={{ display: 'none' }}
                   onChange={e => handleFileChange(campaign.id, e.target.files)}
                   disabled={uploading}
                 />
+                <button
+                  type="button"
+                  className="btn btn-secondary mr-2"
+                  onClick={() => document.getElementById(`file-upload-${campaign.id}`).click()}
+                  disabled={uploading}
+                >
+                  Choose Files
+                </button>
+                {/* Show selected file names */}
+                {selectedFiles[campaign.id] && selectedFiles[campaign.id].length > 0 && (
+                  <div className="mt-2 text-sm text-gray-700">
+                    <div className="font-semibold">Selected files:</div>
+                    {Array.from(selectedFiles[campaign.id]).map((file, idx) => (
+                      <div key={idx} className="inline-block mr-2 mb-1 cursor-pointer bg-gray-200 px-2 py-1 rounded hover:bg-red-200" title="Click to remove"
+                        onClick={() => handleRemoveSelectedFile(campaign.id, file.name)}>
+                        {file.name} <span className="text-red-500 font-bold">×</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Show uploaded file names for this session */}
+                {uploadedFiles[campaign.id] && uploadedFiles[campaign.id].length > 0 && (
+                  <div className="mt-2 text-sm text-green-700">
+                    <div className="font-semibold">Uploaded this session:</div>
+                    {uploadedFiles[campaign.id].map((file, idx) => (
+                      <div key={idx}>{file.name}</div>
+                    ))}
+                  </div>
+                )}
                 <button
                   className="btn btn-primary mt-2"
                   onClick={() => handleUpload(campaign.id)}

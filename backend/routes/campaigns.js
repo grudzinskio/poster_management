@@ -14,6 +14,22 @@ const {
   updateCampaignStatusByContractor,
   getContractorCampaigns
 } = require('../controllers/campaignController');
+const multer = require('multer');
+const path = require('path');
+
+// Configure multer for local disk storage
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../uploads/campaign_images'));
+  },
+  filename: function (req, file, cb) {
+    // Save with campaignId and timestamp for uniqueness
+    const campaignId = req.params.id;
+    const ext = path.extname(file.originalname);
+    cb(null, `campaign_${campaignId}_${Date.now()}${ext}`);
+  }
+});
+const upload = multer({ storage });
 
 /**
  * GET /api/campaigns - Retrieve campaigns based on user role
@@ -54,5 +70,23 @@ router.put('/:id/status', authenticateToken, requirePermission('edit_campaign'),
  * PUT /api/campaigns/:id/contractor-status - Update campaign status (contractor)
  */
 router.put('/:id/contractor-status', authenticateToken, requireRole('contractor'), updateCampaignStatusByContractor);
+
+/**
+ * POST /api/campaigns/:id/images - Upload campaign images
+ */
+router.post('/:id/images', authenticateToken, requireRole('contractor'), upload.array('images', 10), async (req, res) => {
+  // Debug: Log user info attached to request
+  console.log('Upload images route - req.user:', req.user);
+  console.log('Upload images route - req.userInstance:', req.userInstance);
+  // You can save file info to DB here if needed
+  res.json({ message: 'Images uploaded', files: req.files });
+});
+
+// Create uploads/campaign_images directory if it doesn't exist
+const fs = require('fs');
+const uploadsDir = path.join(__dirname, '../uploads/campaign_images');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
 
 module.exports = router;

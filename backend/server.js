@@ -20,6 +20,7 @@ const PORT = 3001;
 // Middleware configuration
 app.use(cors());             // Enable CORS for cross-origin requests from frontend
 app.use(express.json());     // Parse JSON request bodies
+app.use('/uploads/campaign_images', express.static(__dirname + '/uploads/campaign_images'));
 
 // Mount all routes
 app.use(routes);
