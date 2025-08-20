@@ -12,19 +12,19 @@ function ContractorCampaignManagement({ token, user }) {
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState({});
   const [uploadedFiles, setUploadedFiles] = useState({});
-  
+
   const { get, put, post, error: apiError, setError: setApiError } = useApi(token);
-  
+
   // Use custom hook for active campaigns
-  const { 
-    data: campaigns, 
-    loading: campaignsLoading, 
+  const {
+    data: campaigns,
+    loading: campaignsLoading,
     error: fetchError,
-    refetch: refetchCampaigns 
+    refetch: refetchCampaigns
   } = useDataFetching('/campaigns/contractor', token);
 
   const error = apiError || fetchError;
-  
+
   // Keep manual fetching for completed campaigns since it's conditional
   const [completedLoading, setCompletedLoading] = useState(false);
 
@@ -84,27 +84,41 @@ function ContractorCampaignManagement({ token, user }) {
     });
   };
 
+
   const handleUpload = async (campaignId) => {
     if (!selectedFiles[campaignId] || selectedFiles[campaignId].length === 0) return;
+
     setUploading(true);
     setApiError('');
+
     try {
       const formData = new FormData();
-      Array.from(selectedFiles[campaignId]).forEach(file => {
+      const filesToUpload = selectedFiles[campaignId];
+
+      // Add files to FormData
+      Array.from(filesToUpload).forEach(file => {
         formData.append('images', file);
       });
-      await post(`/campaigns/${campaignId}/images`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setSelectedFiles({ ...selectedFiles, [campaignId]: null });
-      // Add uploaded files to uploadedFiles state
+
+      // Remove the headers parameter - let useApi handle it
+      await post(`/campaigns/${campaignId}/images`, formData);
+
+      // Reset selected files and file input
+      setSelectedFiles(prev => ({ ...prev, [campaignId]: [] }));
+      document.getElementById(`file-upload-${campaignId}`).value = '';
+
+      // Add uploaded files to uploadedFiles state (use the files we just uploaded)
       setUploadedFiles(prev => {
         const prevFiles = prev[campaignId] || [];
         return {
           ...prev,
-          [campaignId]: [...prevFiles, ...Array.from(selectedFiles[campaignId])]
+          [campaignId]: [...prevFiles, ...filesToUpload]
         };
       });
-      refetchCampaigns(); // Use refetch instead of fetchCampaigns
+
+      refetchCampaigns();
     } catch (err) {
+      console.error('Upload error:', err);
       setApiError('Failed to upload images');
     } finally {
       setUploading(false);
