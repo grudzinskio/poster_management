@@ -6,6 +6,7 @@ import { useApi } from '../../hooks/useApi';
 import { formatDate, getStatusDisplay } from '../../utils/formatters';
 import Permission from '../Permission';
 import ContractorAssignment from './ContractorAssignment';
+import CampaignImages from '../CampaignImages';
 
 function CampaignRow({ 
   campaign, 
@@ -28,6 +29,7 @@ function CampaignRow({
     status: campaign.status
   });
 
+  const [showImages, setShowImages] = useState(false);
   const { put, error, setError } = useApi(token);
 
   const handleEditChange = (e) => {
@@ -203,9 +205,29 @@ function CampaignRow({
                 Assign
               </button>
             </Permission>
+            <Permission permission="view_campaigns">
+              <button
+                onClick={() => setShowImages(!showImages)}
+                className="bg-purple-600 text-white px-2 py-1 rounded text-xs hover:bg-purple-700 transition-colors"
+                title={showImages ? "Hide Images" : "View Images"}
+              >
+                {showImages ? '👁️‍🗨️ Hide' : '📷 Images'}
+              </button>
+            </Permission>
           </div>
         </td>
       </tr>
+      
+      {/* Images expansion row */}
+      {showImages && (
+        <tr>
+          <td colSpan="8" className="p-4 bg-gray-50 border-t border-gray-300">
+            <CampaignImages campaignId={campaign.id} token={token} />
+          </td>
+        </tr>
+      )}
+      
+      {/* Contractor assignment row */}
       {isAssigning && (
         <tr>
           <td colSpan="8" className="table-cell p-0">

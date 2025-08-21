@@ -89,4 +89,60 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+router.get('/:id/images', authenticateToken, requirePermission('view_campaigns'), async (req, res) => {
+  const { id } = req.params;
+  const fs = require('fs');
+  const path = require('path');
+  
+  try {
+    const imagesDir = path.join(__dirname, '../uploads/campaign_images');
+    
+    // Check if uploads directory exists
+    if (!fs.existsSync(imagesDir)) {
+      return res.json([]);
+    }
+    
+    // Get all files in the directory
+    const files = fs.readdirSync(imagesDir);
+    
+    // Filter files that belong to this campaign (filename starts with campaign_{id}_)
+    const campaignFiles = files.filter(file => 
+      file.startsWith(`campaign_${id}_`) && 
+      /\.(jpg|jpeg|png|gif|webp)$/i.test(file)
+    );
+    
+    // Return the filenames
+    res.json(campaignFiles);
+  } catch (error) {
+    console.error('Error fetching campaign images:', error);
+    res.status(500).json({ error: 'Failed to fetch campaign images' });
+  }
+});
+
+/**
+ * GET /api/campaigns/images/:filename - Serve image files
+ * Static file serving for campaign images
+ */
+router.get('/images/:filename', authenticateToken, requirePermission('view_campaigns'), (req, res) => {
+  const { filename } = req.params;
+  const path = require('path');
+  const fs = require('fs');
+  
+  // Security: Only allow alphanumeric, underscores, dots, and hyphens in filename
+  if (!/^[a-zA-Z0-9._-]+$/.test(filename)) {
+    return res.status(400).json({ error: 'Invalid filename' });
+  }
+  
+  const filePath = path.join(__dirname, '../uploads/campaign_images', filename);
+  
+  // Check if file exists and is within the allowed directory
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Image not found' });
+  }
+  
+  // Serve the file
+  res.sendFile(filePath);
+});
+
 module.exports = router;
+
