@@ -18,7 +18,6 @@ function UserManagement({ token }) {
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [changingPasswordId, setChangingPasswordId] = useState(null);
-  const [newPassword, setNewPassword] = useState('');
   const [passwordInputs, setPasswordInputs] = useState({});
   const [newUser, setNewUser] = useState({ 
     username: '', 
@@ -64,7 +63,7 @@ function UserManagement({ token }) {
       });
       setSuccess('User added successfully!');
       refetch(); // Use refetch instead of manual state update
-    } catch (err) {
+    } catch {
       // Error is already set by useApi hook
     }
   };
@@ -86,7 +85,7 @@ function UserManagement({ token }) {
       setEditingId(null);
       setSuccess('User updated successfully!');
       refetch(); // Use refetch instead of manual state update
-    } catch (err) {
+    } catch {
       // Error is already set by useApi hook
     }
   };
@@ -100,7 +99,7 @@ function UserManagement({ token }) {
       await del(`/users/${userId}`);
       setSuccess('User deleted successfully!');
       refetch(); // Use refetch instead of manual state update
-    } catch (err) {
+    } catch {
       // Error is already set by useApi hook
     }
   };
@@ -135,7 +134,7 @@ function UserManagement({ token }) {
         return newInputs;
       });
       setSuccess('Password updated successfully!');
-    } catch (err) {
+    } catch {
       // Error is already set by useApi hook
     }
   };

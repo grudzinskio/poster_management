@@ -6,6 +6,7 @@ function ImageWithAuth({ src, token, alt, className, onClick }) {
   const [imageSrc, setImageSrc] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const prevBlobUrlRef = React.useRef(null);
 
   useEffect(() => {
     const loadImage = async () => {
@@ -24,6 +25,12 @@ function ImageWithAuth({ src, token, alt, className, onClick }) {
           const objectUrl = URL.createObjectURL(blob);
           setImageSrc(objectUrl);
           console.log('Created blob URL:', objectUrl);
+
+          // Revoke previous blob URL if exists
+          if (prevBlobUrlRef.current && prevBlobUrlRef.current.startsWith('blob:')) {
+            URL.revokeObjectURL(prevBlobUrlRef.current);
+          }
+          prevBlobUrlRef.current = objectUrl;
         } else {
           console.error('Failed to fetch image:', response.status, response.statusText);
           setError(true);
@@ -42,11 +49,12 @@ function ImageWithAuth({ src, token, alt, className, onClick }) {
 
     // Cleanup function - this runs when component unmounts or dependencies change
     return () => {
-      if (imageSrc && imageSrc.startsWith('blob:')) {
-        URL.revokeObjectURL(imageSrc);
+      if (prevBlobUrlRef.current && prevBlobUrlRef.current.startsWith('blob:')) {
+        URL.revokeObjectURL(prevBlobUrlRef.current);
+        prevBlobUrlRef.current = null;
       }
     };
-  }, [src, token]); // Removed imageSrc from dependencies to prevent infinite loop
+  }, [src, token]); // imageSrc is now managed via ref for cleanup
 
   if (loading) {
     return (

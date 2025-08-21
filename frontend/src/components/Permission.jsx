@@ -38,7 +38,7 @@ function Permission({
   size = 'md',
   ...props 
 }) {
-  const { user, loading, can, canAny, canAll } = useUserPermissions();
+  const { loading, can, canAny, canAll } = useUserPermissions();
 
   // Don't render anything while loading
   if (loading) {

@@ -9,7 +9,7 @@ import SuccessAlert from './ui/SuccessAlert';
 import CampaignForm from './employee/CampaignForm';
 import CampaignRow from './employee/CampaignRow';
 
-function EmployeeCampaignManagement({ token, user }) {
+function EmployeeCampaignManagement({ token }) {
   const [success, setSuccess] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [assigningId, setAssigningId] = useState(null);
@@ -71,7 +71,7 @@ function EmployeeCampaignManagement({ token, user }) {
           companies={companies}
           onCampaignCreated={handleCampaignCreated}
           onSuccess={setSuccess}
-          onError={(error) => {}} // Error is handled internally by the form
+          onError={() => {}} // Error is handled internally by the form
         />
       </PermissionGuard>
 

@@ -37,7 +37,7 @@ function CompanyManagement({ token }) {
       setNewCompany({ name: '' });
       setSuccess('Company added successfully!');
       refetch(); // Use refetch instead of manual state update
-    } catch (err) {
+    } catch {
       // Error is already set by useApi hook
     }
   };
@@ -75,7 +75,7 @@ function CompanyManagement({ token }) {
       await del(`/companies/${companyId}`);
       setSuccess('Company deleted successfully!');
       refetch(); // Use refetch instead of manual state update
-    } catch (err) {
+    } catch {
       // Error is already set by useApi hook
     }
   };

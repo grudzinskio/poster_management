@@ -7,10 +7,8 @@ import { useUserPermissions, getCategoryDisplayName } from '../hooks/useUser.jsx
 function SimplePermissionBox() {
   const [isExpanded, setIsExpanded] = useState(false);
   const { 
-    user,
     getPermissions,
     getMissingPermissions,
-    getPermissionsByCategory,
     getPermissionDisplayName,
     loading, 
     error 

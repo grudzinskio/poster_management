@@ -6,7 +6,7 @@ import LoadingSpinner from './ui/LoadingSpinner';
 import ErrorAlert from './ui/ErrorAlert';
 import CampaignCard from './ui/CampaignCard';
 
-function ContractorCampaignManagement({ token, user }) {
+function ContractorCampaignManagement({ token }) {
   const [completedCampaigns, setCompletedCampaigns] = useState([]);
   const [showCompleted, setShowCompleted] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -35,8 +35,8 @@ function ContractorCampaignManagement({ token, user }) {
     try {
       const data = await get('/campaigns/completed');
       setCompletedCampaigns(data);
-    } catch (err) {
-      console.error('Error fetching completed campaigns:', err);
+    } catch {
+      // Error fetching completed campaigns
     } finally {
       setCompletedLoading(false);
     }
@@ -59,7 +59,7 @@ function ContractorCampaignManagement({ token, user }) {
     try {
       await put(`/campaigns/${campaignId}/contractor-status`, { status: nextStatus });
       refetchCampaigns(); // Use refetch from custom hook
-    } catch (err) {
+    } catch {
       setApiError('Failed to update status');
     }
   };
@@ -126,7 +126,7 @@ function ContractorCampaignManagement({ token, user }) {
   };
 
   const loading = showCompleted ? completedLoading : campaignsLoading;
-  const displayCampaigns = showCompleted ? completedCampaigns : campaigns;
+  // const displayCampaigns = showCompleted ? completedCampaigns : campaigns;
 
   return (
     <div className="bg-white p-6 shadow-sm border border-gray-300">

@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { useDataFetching } from '../hooks/useDataFetching';
-import { formatDate, getStatusDisplay } from '../utils/formatters';
 import LoadingSpinner from './ui/LoadingSpinner';
 import ErrorAlert from './ui/ErrorAlert';
 import CampaignCard from './ui/CampaignCard';
